@@ -21,22 +21,22 @@ F02 and F03 can run in parallel after F01.
 
 ## F01 — Repository scaffold & tooling
 
-- `pnpm create next-app@15` with App Router, TypeScript, `src/`, ESLint, import alias `@/*`.
+- `pnpm create next-app@16` with App Router, TypeScript, `src/`, ESLint, Tailwind v4, import alias `@/*`.
 - `tsconfig.json`: `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`.
-- `.nvmrc` = `22`; `package.json` `"engines": { "node": ">=22 <23" }`, `"packageManager": "pnpm@<version>"`.
+- `.nvmrc` = `24` (Node 24 LTS); `package.json` `"engines": { "node": ">=24" }`, `"packageManager": "pnpm@<version>"`.
 - Scripts (the contract every later story relies on):
 
-| Script                                           | Command                                       |
-| ------------------------------------------------ | --------------------------------------------- |
-| `dev`                                            | `next dev`                                    |
-| `build`                                          | `next build`                                  |
-| `lint`                                           | `eslint .`                                    |
-| `typecheck`                                      | `tsc --noEmit`                                |
-| `format` / `format:check`                        | `prettier --write .` / `prettier --check .`   |
-| `test`                                           | `vitest run` (unit only; `tests/db` excluded) |
-| `test:db`                                        | `vitest run --project db` (added in F04)      |
-| `test:e2e`                                       | `playwright test`                             |
-| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03                                  |
+| Script                                           | Command                                              |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| `dev`                                            | `next dev`                                           |
+| `build`                                          | `next build`                                         |
+| `lint`                                           | `eslint .`                                           |
+| `typecheck`                                      | `SKIP_ENV_VALIDATION=1 next typegen && tsc --noEmit` |
+| `format` / `format:check`                        | `prettier --write .` / `prettier --check .`          |
+| `test`                                           | `vitest run --project unit` (`tests/db` excluded)    |
+| `test:db`                                        | `vitest run --project db` (added in F04)             |
+| `test:e2e`                                       | `playwright test`                                    |
+| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03                                         |
 
 - `src/env.ts`: Zod schemas split into `server` and `client` (`NEXT_PUBLIC_*`);
   throws a readable error listing missing variables. Initial variables:
@@ -44,6 +44,11 @@ F02 and F03 can run in parallel after F01.
   `SUPABASE_SERVICE_ROLE_KEY` (server), `NEXT_PUBLIC_SITE_URL`.
 - Landing page at `/`: product pitch + "Sign in" link (placeholder until F05).
 - Playwright smoke test: `/` returns 200 and shows the product name.
+- Notes: `next typegen` generates the global `LayoutProps`/`PageProps` types, so
+  it runs before `tsc`. `src/env.ts` is imported by `next.config.ts`, so
+  `dev`/`build`/`start` fail fast on bad config; `SKIP_ENV_VALIDATION=1` bypasses
+  it (typegen, CI jobs without secrets). pnpm `shellEmulator` keeps `VAR=1 cmd`
+  scripts working on Windows.
 
 ## F02 — CI pipeline
 
@@ -130,7 +135,7 @@ Password for all seed users: `password123` (local only).
 - Providers: email magic link (OTP) and GitHub OAuth (Supabase Auth). The GitHub
   OAuth app callback is `https://ijhtgvmcyrzmkmfiavnu.supabase.co/auth/v1/callback`.
 - Routes: `/sign-in`, `/auth/callback` (PKCE code exchange), `/auth/error`, sign-out Server Action.
-- `middleware.ts`: refresh session via `@supabase/ssr`; unauthenticated
+- `src/proxy.ts` (Next.js 16 rename of `middleware.ts`): refresh session via `@supabase/ssr`; unauthenticated
   `/w/*`, `/u/*`, `/onboarding` → `/sign-in?next=<path>`. `next` must be a
   same-origin relative path (open-redirect guard).
 - Error copy for: expired/used link, OAuth denied, email rate limited.
@@ -143,7 +148,7 @@ Password for all seed users: `password123` (local only).
   DB-enforced uniqueness) → discipline → create or join a workspace (join via
   pending invite for the user's email).
 - Guard: signed-in users with `profiles.onboarded_at is null` are redirected
-  to `/onboarding` from every app route (middleware or layout).
+  to `/onboarding` from every app route (proxy or layout).
 - `/u/[handle]`: avatar (Storage bucket `avatars`, path `<user_id>/…`, owner-write
   policy, ≤ 2 MB, image types only), bio, skills tags, links; edit only for owner.
 - Placeholders: "Owned assets" (C02) and "Recent activity" (C07).

@@ -1,5 +1,7 @@
 # CLAUDE.md — Tessera
 
+@AGENTS.md
+
 Collaborative workspace for data teams (catalog, lineage, quality, incidents,
 modeling, ADRs, docs) joined by one entity graph. Portfolio project first,
 open source later.
@@ -18,6 +20,22 @@ open source later.
 - Conventional Commits (`feat(scope): …`, `fix`, `chore`, `docs`, `test`, `ci`, `refactor`).
 - Squash merge only; CI must be green.
 - Work one story (issue) per PR; respect the `Depends on` order in the roadmap.
+
+## Commands
+
+- `pnpm dev` · `pnpm build` · `pnpm lint` · `pnpm typecheck` · `pnpm format:check`
+- `pnpm test` (Vitest unit) · `pnpm test:e2e` (Playwright)
+- Before a PR: `pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm build`
+
+## Stack notes
+
+- Next.js 16: `middleware.ts` is now `src/proxy.ts`; `LayoutProps`/`PageProps`
+  are global generated types (`next typegen`). Read `node_modules/next/dist/docs/`
+  when unsure about an API.
+- Node 24 LTS, pnpm, Tailwind v4, shadcn/ui (`radix-nova`, add components with
+  `pnpm dlx shadcn@latest add <name>`), Zod 4, Vitest 5, Playwright.
+- Env vars: add to `src/env.ts` schemas and `.env.example`; import `env` from
+  `@/env`, never read `process.env` directly.
 
 ## Non-negotiables
 

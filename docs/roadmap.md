@@ -69,7 +69,7 @@ project to workspace visibility.
 | Concern                        | Choice                                                                                                                    | Why                                                                                                                                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Language                       | **TypeScript** (strict) end to end                                                                                        | One language for UI, API, and DB types; best hiring signal for full-stack                                                                                                               |
-| Web framework                  | **Next.js 15** (App Router, React Server Components, Server Actions)                                                      | SSR + API routes in one deployable; mainstream                                                                                                                                          |
+| Web framework                  | **Next.js 16** (App Router, React Server Components, Server Actions)                                                      | SSR + API routes in one deployable; mainstream                                                                                                                                          |
 | DB / Auth / Realtime / Storage | **Supabase** (PostgreSQL 15+)                                                                                             | Postgres for the graph (recursive CTEs), Auth, Realtime for presence/notifications, `pg_cron` for SLA checks, `pgvector` later for AI. Fully OSS, so it self-hosts                      |
 | Authorization                  | **Postgres RLS** as the primary gate                                                                                      | Unlike the table-tennis app (functions are the gate), here the browser talks to Supabase with the user's JWT and RLS enforces tenancy. This is a different pattern to learn and to show |
 | Migrations                     | Supabase CLI (`supabase/migrations`, local stack via Docker)                                                              | Versioned and replayable, unlike hand-run SQL                                                                                                                                           |
@@ -188,7 +188,7 @@ teammate, and see an empty but navigable shell. CI green; RLS tested._
 **Depends on:** —
 **Goal:** a clean, strict, reproducible Next.js + TypeScript project.
 
-- [ ] `pnpm create next-app` (App Router, TS strict, `src/`, ESLint), Node 22 LTS pinned in `.nvmrc` + `engines`.
+- [ ] `pnpm create next-app` (App Router, TS strict, `src/`, ESLint), Node 24 LTS pinned in `.nvmrc` + `engines`.
 - [ ] Tailwind v4 + shadcn/ui init; base theme tokens (light/dark).
 - [ ] Prettier + `eslint-config-prettier`; `.editorconfig`.
 - [ ] Vitest configured (`pnpm test`); Playwright installed (`pnpm test:e2e`) with one smoke test.
@@ -237,7 +237,7 @@ teammate, and see an empty but navigable shell. CI green; RLS tested._
 **Goal:** users can sign up, sign in, and sign out securely.
 
 - [ ] Email magic link + GitHub OAuth (Supabase Auth).
-- [ ] `middleware.ts` refreshes the session and protects `/w/*` routes.
+- [ ] `proxy.ts` (Next.js 16 `middleware.ts`) refreshes the session and protects `/w/*` routes.
 - [ ] Sign-in page, auth callback route, sign-out action.
 - [ ] Error states (expired link, OAuth denied) in plain language.
       **Acceptance:** Playwright e2e signs in with a test user (Supabase Admin API creates the user) and reaches `/w`; signed-out access to `/w/*` redirects to sign-in.

@@ -20,7 +20,7 @@ Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architec
 | Concern                          | Choice                                                                               |
 | -------------------------------- | ------------------------------------------------------------------------------------ |
 | Language                         | TypeScript, `strict: true`, end to end                                               |
-| Web                              | Next.js 15 (App Router, RSC, Server Actions)                                         |
+| Web                              | Next.js 16 (App Router, RSC, Server Actions)                                         |
 | Data / Auth / Realtime / Storage | Supabase (Postgres 15+), `@supabase/ssr`                                             |
 | Migrations                       | Supabase CLI, `supabase/migrations/*.sql`, local stack via Docker                    |
 | DB types                         | `supabase gen types typescript` → `src/lib/db/types.ts` (committed)                  |
@@ -31,7 +31,7 @@ Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architec
 | Tests                            | Vitest (unit), Vitest + local Supabase (DB/RLS), Playwright + axe (e2e/a11y)         |
 | CI                               | GitHub Actions                                                                       |
 | Hosting                          | Vercel + Supabase Cloud (project `tessera`, ref `ijhtgvmcyrzmkmfiavnu`, `eu-west-3`) |
-| Package manager                  | pnpm; Node 22 LTS (`.nvmrc`)                                                         |
+| Package manager                  | pnpm; Node 24 LTS (`.nvmrc`)                                                         |
 | License                          | Apache-2.0                                                                           |
 
 Single Next.js app (not a monorepo) until a second package exists (SDK, O04).
