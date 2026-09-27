@@ -232,7 +232,7 @@ abandoned uploads).
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/w`                              | Workspaces list + pending invites; redirects to the last used workspace (cookie `tessera-last-workspace`, written client-side by the workspace layout on real visits; the proxy cannot tell prefetches apart) unless `?all` |
 | `/w/new`                          | Create a workspace (`create_workspace`), then open it                                                                                                                                                                       |
-| `/w/[workspace]`                  | Workspace home (placeholder until F08); the layout 404s for non-members and renders the switcher                                                                                                                            |
+| `/w/[workspace]`                  | Redirects to the workspace home (`/home` since F08); the layout 404s for non-members and renders the switcher                                                                                                               |
 | `/w/[workspace]/settings/members` | Everyone sees the list; owners/admins invite, change roles, remove, revoke invites; anyone can leave                                                                                                                        |
 | `/invite/[token]`                 | Preview and accept an invite (protected route; onboarding runs first for new users)                                                                                                                                         |
 
@@ -256,14 +256,29 @@ copy in the UI (last owner → "make someone else an owner first").
 ## F08 — App shell & design system baseline
 
 - Routes: `/w/[workspace]/{home,projects,catalog,docs,settings}` each render an
-  empty state.
-- `src/features/registry.ts`: `{ id, label, icon, href(ws), minRole? }[]` drives
-  the sidebar; later milestones add entries.
-- Components: `EmptyState`, `PageHeader`, `DataTable` (TanStack Table),
-  toasts (sonner), `ConfirmDialog`, skeletons, `error.tsx`, `not-found.tsx`.
-- Theme: light/dark via `next-themes`, visible focus rings, responsive ≥ 768px.
-- e2e: visit every shell route; `@axe-core/playwright` reports no `serious` or
-  `critical` violations.
+  empty state. `/w/[workspace]` redirects to `home` (links and redirects point
+  at `workspaceHome(slug)` directly); `/w/[workspace]/[...missing]` renders the
+  in-shell `not-found.tsx`.
+- `src/features/registry.ts`: `{ id, label, icon, href(ws), minRole?, group }[]`
+  drives the sidebar (`featuresFor(role)`, `activeFeature(pathname, ws)`);
+  later milestones add entries. `minRole` only hides navigation; RLS stays the
+  gate. Breadcrumbs derive from the URL (`src/lib/shell/breadcrumbs.ts`).
+- Shell (`src/app/w/[workspace]/layout.tsx`): shadcn `Sidebar`
+  (`collapsible="icon"`, state kept in the `sidebar_state` cookie, drawer below
+  768px) with the workspace switcher, feature links and account menu; top bar
+  with sidebar toggle, breadcrumbs and theme toggle; skip link to
+  `<main id="content">`. Pages render inside `Page` (no `<main>` of their own).
+- Components: `EmptyState`, `PageHeader`, `Page`, `DataTable` (TanStack Table
+  v9: `useTable` + `tableFeatures`, client sorting, `aria-sort`, sr-only
+  caption, empty state under the headers), toasts (sonner), `ConfirmDialog`,
+  `PageSkeleton`, `RouteError` (`as="div"` inside the shell), `error.tsx`,
+  `global-error.tsx`, `not-found.tsx`.
+- Theme: light/dark/system via `next-themes` (toggle in both top bars),
+  visible focus rings, responsive ≥ 768px.
+- e2e (`tests/e2e/shell.spec.ts`): visit every shell route in light and dark
+  mode; `@axe-core/playwright` (WCAG 2.1 A/AA tags) reports no `serious` or
+  `critical` violations; sidebar, breadcrumbs, theme toggle, in-shell 404, skip
+  link, Ctrl+B collapse and a 768px viewport.
 
 ---
 

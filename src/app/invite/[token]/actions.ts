@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/forms";
 import { requireUser } from "@/lib/profile/server";
 import { inviteTokenSchema } from "@/lib/workspace/invite-token";
+import { workspaceHome } from "@/lib/workspace/paths";
 
 /** Accepts the invite behind `token` and opens its workspace. */
 export async function acceptInvite(
@@ -29,5 +30,5 @@ export async function acceptInvite(
     .select("slug")
     .eq("id", workspaceId)
     .single();
-  redirect(workspace ? `/w/${workspace.slug}` : "/w");
+  redirect(workspace ? workspaceHome(workspace.slug) : "/w");
 }

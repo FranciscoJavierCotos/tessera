@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/profile/server";
 import { LAST_WORKSPACE_COOKIE } from "@/lib/workspace/last-used";
+import { workspaceHome } from "@/lib/workspace/paths";
 import { ROLE_LABELS } from "@/lib/workspace/roles";
 import { listMyWorkspaces } from "@/lib/workspace/server";
 
@@ -31,7 +32,7 @@ export default async function WorkspacesPage({
 
   const last = cookieStore.get(LAST_WORKSPACE_COOKIE)?.value?.toLowerCase();
   if (!showAll && last && workspaces.some((w) => w.slug === last)) {
-    redirect(`/w/${last}`);
+    redirect(workspaceHome(last));
   }
 
   const { supabase, userId } = await requireUser();
@@ -84,7 +85,7 @@ export default async function WorkspacesPage({
               {workspaces.map((workspace) => (
                 <li key={workspace.id}>
                   <Link
-                    href={`/w/${workspace.slug}`}
+                    href={workspaceHome(workspace.slug)}
                     prefetch={false}
                     className="flex items-center justify-between gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                   >

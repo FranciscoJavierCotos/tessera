@@ -2,6 +2,7 @@
 
 import { CircleAlert, Mail } from "lucide-react";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,11 @@ export function InviteList({
                         workspaceId,
                         inviteId: invite.id,
                       });
-                      if (!result.ok) setError(result.message);
+                      if (result.ok) {
+                        toast.success(`Invite for ${invite.email} revoked`);
+                      } else {
+                        setError(result.message);
+                      }
                     });
                   }}
                 />

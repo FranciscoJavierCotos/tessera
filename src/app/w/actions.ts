@@ -6,6 +6,7 @@ import { z } from "zod";
 import { fieldErrors, type FormState } from "@/lib/forms";
 import { workspaceSchema } from "@/lib/profile/schema";
 import { requireUser, UNIQUE_VIOLATION } from "@/lib/profile/server";
+import { workspaceHome } from "@/lib/workspace/paths";
 
 const GENERIC_ERROR = "Something went wrong. Try again.";
 
@@ -32,7 +33,7 @@ export async function createWorkspace(
   }
   if (error || !data) return { status: "error", message: GENERIC_ERROR };
 
-  redirect(`/w/${data.slug}`);
+  redirect(workspaceHome(data.slug));
 }
 
 const pendingInviteInput = z.object({ inviteId: z.uuid() });
@@ -64,5 +65,5 @@ export async function joinPendingInvite(
     .select("slug")
     .eq("id", workspaceId)
     .single();
-  redirect(workspace ? `/w/${workspace.slug}` : "/w");
+  redirect(workspace ? workspaceHome(workspace.slug) : "/w");
 }

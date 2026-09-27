@@ -19,6 +19,15 @@ export const ROLE_DESCRIPTIONS: Record<WorkspaceRole, string> = {
   viewer: "Read-only access.",
 };
 
+/** Whether `role` is `min` or more privileged. */
+export function hasRole(
+  role: WorkspaceRole | null,
+  min: WorkspaceRole,
+): boolean {
+  if (!role) return false;
+  return WORKSPACE_ROLES.indexOf(role) <= WORKSPACE_ROLES.indexOf(min);
+}
+
 // These mirror the RLS policies on `workspace_members` and `invites` so the
 // UI only offers what the database will accept. The database is the gate.
 

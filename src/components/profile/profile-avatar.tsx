@@ -20,7 +20,9 @@ export function ProfileAvatar({
   return (
     <Avatar className={cn("size-20", className)}>
       {src && <AvatarImage src={src} alt="" />}
-      <AvatarFallback className="text-xl">{initials(name)}</AvatarFallback>
+      <AvatarFallback className="text-xl font-medium text-foreground">
+        {initials(name)}
+      </AvatarFallback>
     </Avatar>
   );
 }
