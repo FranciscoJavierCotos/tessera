@@ -1,3 +1,7 @@
+# Tessera does not run a local Supabase stack (no Docker). This file is used by
+# the CLI for `link`, `db push`, `db push --include-seed` and `gen types`
+# against the cloud project; the local-stack sections below are unused.
+#
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the

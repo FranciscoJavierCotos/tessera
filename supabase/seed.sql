@@ -1,5 +1,7 @@
--- Local development seed. Runs after migrations on `pnpm db:reset`.
--- NEVER apply to a cloud project. Password for every user: password123
+-- Development seed for the `tessera` Supabase Cloud project, loaded on demand
+-- with `pnpm db:seed`. Idempotent: safe to run again. NEVER load it into a
+-- production project. Password for every user: password123
+-- Automated tests (F04) create their own fixtures and do not use this data.
 --
 -- | User      | Email              | Workspace | Role   |
 -- | --------- | ------------------ | --------- | ------ |
@@ -7,7 +9,7 @@
 -- | Val (V)   | val@tessera.test   | acme      | viewer |
 -- | Bob (B)   | bob@tessera.test   | globex    | owner  |
 --
--- IDs are fixed so tests (F04) can reference them.
+-- IDs are fixed so they are easy to reference while testing by hand.
 
 -- Users (the on_auth_user_created trigger creates their profiles) ------------
 
@@ -34,7 +36,8 @@ from (
     ('00000000-0000-4000-a000-00000000000a'::uuid, 'alice@tessera.test', 'Alice'),
     ('00000000-0000-4000-a000-00000000000b'::uuid, 'bob@tessera.test', 'Bob'),
     ('00000000-0000-4000-a000-00000000000c'::uuid, 'val@tessera.test', 'Val')
-) as u (id, email, display_name);
+) as u (id, email, display_name)
+on conflict (id) do nothing;
 
 insert into auth.identities (
   id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at
@@ -49,7 +52,10 @@ select
   now(),
   now()
 from auth.users u
-where u.email like '%@tessera.test';
+where u.email in ('alice@tessera.test', 'bob@tessera.test', 'val@tessera.test')
+  and not exists (
+    select 1 from auth.identities i where i.user_id = u.id and i.provider = 'email'
+  );
 
 -- Profiles (onboarded) -------------------------------------------------------
 
@@ -71,10 +77,12 @@ where p.id = s.id;
 insert into public.workspaces (id, slug, name, created_by)
 values
   ('00000000-0000-4000-b000-000000000001', 'acme', 'Acme Data', '00000000-0000-4000-a000-00000000000a'),
-  ('00000000-0000-4000-b000-000000000002', 'globex', 'Globex Analytics', '00000000-0000-4000-a000-00000000000b');
+  ('00000000-0000-4000-b000-000000000002', 'globex', 'Globex Analytics', '00000000-0000-4000-a000-00000000000b')
+on conflict (id) do nothing;
 
 insert into public.workspace_members (workspace_id, user_id, role)
-values ('00000000-0000-4000-b000-000000000001', '00000000-0000-4000-a000-00000000000c', 'viewer');
+values ('00000000-0000-4000-b000-000000000001', '00000000-0000-4000-a000-00000000000c', 'viewer')
+on conflict (workspace_id, user_id) do nothing;
 
 -- Entities in acme ------------------------------------------------------------
 
@@ -83,4 +91,5 @@ values
   ('00000000-0000-4000-c000-000000000001', '00000000-0000-4000-b000-000000000001',
    'page', 'Welcome to Acme', 'workspace', '00000000-0000-4000-a000-00000000000a'),
   ('00000000-0000-4000-c000-000000000002', '00000000-0000-4000-b000-000000000001',
-   'page', 'Alice''s private notes', 'private', '00000000-0000-4000-a000-00000000000a');
+   'page', 'Alice''s private notes', 'private', '00000000-0000-4000-a000-00000000000a')
+on conflict (id) do nothing;

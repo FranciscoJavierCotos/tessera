@@ -22,7 +22,7 @@ export default defineConfig({
           setupFiles: ["./vitest.setup.ts"],
         },
       },
-      // F04 adds the `db` project (tests/db/**, against the local Supabase stack).
+      // F04 adds the `db` project (tests/db/**, against the Supabase Cloud project).
     ],
   },
 });

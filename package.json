@@ -18,11 +18,11 @@
     "test:watch": "vitest --project unit",
     "test:e2e": "playwright test",
     "supabase": "supabase",
-    "db:start": "supabase start",
-    "db:stop": "supabase stop",
-    "db:reset": "supabase db reset",
-    "db:lint": "supabase db lint --level warning",
-    "db:types": "supabase gen types typescript --local --schema public > src/lib/db/types.ts"
+    "db:link": "supabase link --project-ref ijhtgvmcyrzmkmfiavnu",
+    "db:push": "supabase db push --linked",
+    "db:lint": "supabase db lint --linked --level warning",
+    "db:seed": "supabase db push --linked --include-seed",
+    "db:types": "supabase gen types typescript --project-id ijhtgvmcyrzmkmfiavnu --schema public > src/lib/db/types.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

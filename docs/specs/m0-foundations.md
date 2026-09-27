@@ -26,17 +26,17 @@ F02 and F03 can run in parallel after F01.
 - `.nvmrc` = `24` (Node 24 LTS); `package.json` `"engines": { "node": ">=24" }`, `"packageManager": "pnpm@<version>"`.
 - Scripts (the contract every later story relies on):
 
-| Script                                           | Command                                              |
-| ------------------------------------------------ | ---------------------------------------------------- |
-| `dev`                                            | `next dev`                                           |
-| `build`                                          | `next build`                                         |
-| `lint`                                           | `eslint .`                                           |
-| `typecheck`                                      | `SKIP_ENV_VALIDATION=1 next typegen && tsc --noEmit` |
-| `format` / `format:check`                        | `prettier --write .` / `prettier --check .`          |
-| `test`                                           | `vitest run --project unit` (`tests/db` excluded)    |
-| `test:db`                                        | `vitest run --project db` (added in F04)             |
-| `test:e2e`                                       | `playwright test`                                    |
-| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03                                         |
+| Script                                         | Command                                              |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| `dev`                                          | `next dev`                                           |
+| `build`                                        | `next build`                                         |
+| `lint`                                         | `eslint .`                                           |
+| `typecheck`                                    | `SKIP_ENV_VALIDATION=1 next typegen && tsc --noEmit` |
+| `format` / `format:check`                      | `prettier --write .` / `prettier --check .`          |
+| `test`                                         | `vitest run --project unit` (`tests/db` excluded)    |
+| `test:db`                                      | `vitest run --project db` (added in F04)             |
+| `test:e2e`                                     | `playwright test`                                    |
+| `db:push` / `db:types` / `db:lint` / `db:seed` | added in F03 (cloud project; no Docker)              |
 
 - `src/env.ts`: Zod schemas split into `server` and `client` (`NEXT_PUBLIC_*`);
   throws a readable error listing missing variables. Initial variables:
@@ -61,10 +61,25 @@ F02 and F03 can run in parallel after F01.
 - `CONTRIBUTING.md`: branch naming `<type>/<issue>-<slug>`, Conventional
   Commits, PR must `Closes #n`.
 
-## F03 — Supabase local stack, migrations & core schema
+## F03 — Supabase project, migrations & core schema
 
 Tooling: Supabase CLI as a dev dependency (`supabase` npm package, run through
-`pnpm supabase`); Docker Desktop is a documented prerequisite.
+`pnpm supabase`). **No local stack and no Docker**: the CLI is only used to
+create migration files, push them to the cloud project, generate types and
+lint. One-time setup: `pnpm supabase login` and `pnpm db:link` (asks for the
+database password).
+
+| Script     | Command                                                                   |
+| ---------- | ------------------------------------------------------------------------- |
+| `db:link`  | `supabase link --project-ref ijhtgvmcyrzmkmfiavnu`                        |
+| `db:push`  | `supabase db push` (applies pending migrations to the cloud project)      |
+| `db:types` | `supabase gen types typescript --project-id … > src/lib/db/types.ts`      |
+| `db:lint`  | `supabase db lint --linked --level warning`                               |
+| `db:seed`  | `supabase db push --include-seed` (loads `supabase/seed.sql`; idempotent) |
+
+The Supabase MCP (`apply_migration`, `get_advisors`,
+`generate_typescript_types`) is an equivalent path for migrations, lints and
+types.
 
 ### Enums (`public`)
 
@@ -123,19 +138,30 @@ table; `profiles` rows are only inserted by the `auth.users` trigger.
 | Bob (B)   | `bob@tessera.test`   | `globex`  | owner  |
 
 Plus: one `workspace` entity and one `private` entity (owner Alice) in `acme`.
-Password for all seed users: `password123` (local only).
+Password for all seed users: `password123`. The seed is idempotent and loaded
+into the cloud project only on demand (`pnpm db:seed`); it is for manual
+testing of the dev project and must never be loaded into a production project.
+Automated tests do not depend on it.
 
 ## F04 — RLS test harness + DB job in CI
 
-- `vitest.workspace.ts` with projects `unit` and `db`; `db` runs `tests/db/**`
-  against the local stack (`SUPABASE_URL` from `supabase status -o env`).
-- `tests/db/helpers.ts`: `asUser(email)` signs in with the seed password and
-  returns a typed client; `asAnon()`; `expectDenied(promise)` asserts either an
-  RLS error or zero rows affected/returned.
+- Vitest project `db` runs `tests/db/**` against the Supabase Cloud project
+  (URL and keys from `.env.local` locally, GitHub secrets in CI). No Docker.
+- Fixtures: a `beforeAll` creates users A, B, V with unique emails
+  (`<role>+<runId>@tessera.test`) and random passwords through the Admin API
+  (service role), plus their workspaces and entities; an `afterAll` deletes
+  them (deleting the users cascades to profiles and memberships). Tests never
+  rely on the seed.
+- `tests/db/helpers.ts`: `asUser(user)` signs in and returns a typed client;
+  `asAnon()`; `expectDenied(promise)` asserts either an RLS error or zero rows
+  affected/returned.
 - Minimum cases: B cannot read `acme` entities/members; V cannot insert/update
   entities; V cannot read Alice's private entity; A can read both.
-- CI job `db` (separate from `ci`, also required): setup Supabase CLI →
-  `supabase start` → `supabase db reset` → `pnpm test:db`; also `supabase db lint`.
+- CI job `db` (separate from `ci`, also required): `pnpm test:db` against the
+  cloud project, then `supabase db lint --linked` (needs
+  `SUPABASE_ACCESS_TOKEN` and the DB password as secrets). Runs with
+  `concurrency` so two runs never share fixtures. A PR that adds a migration
+  applies it to the cloud project before its `db` job can pass.
 
 ## F05 — Authentication
 
