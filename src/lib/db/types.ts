@@ -238,6 +238,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_pending_invite: { Args: { invite_id: string }; Returns: string }
       create_workspace: {
         Args: { name: string; slug: string }
         Returns: {
@@ -253,6 +254,19 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      is_handle_available: { Args: { handle: string }; Returns: boolean }
+      my_pending_invites: {
+        Args: never
+        Returns: {
+          expires_at: string
+          id: string
+          invited_by_name: string
+          role: Database["public"]["Enums"]["workspace_role"]
+          workspace_id: string
+          workspace_name: string
+          workspace_slug: string
+        }[]
       }
     }
     Enums: {

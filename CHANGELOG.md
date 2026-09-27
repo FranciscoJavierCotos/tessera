@@ -41,9 +41,26 @@ All notable changes to this project are documented here. The format follows
   `next` restricted to same-origin paths (open-redirect guard); placeholder
   `/w` page; Playwright auth e2e (users created through the Admin API, signed
   in with `auth.admin.generateLink`) and an `e2e` CI job.
+- Onboarding & user profile (F06): `/onboarding` flow (display name → handle
+  with live availability check → discipline → create a workspace or join one
+  through a pending invite for the user's email); `src/proxy.ts` sends
+  signed-in users who have not finished onboarding from every app route to
+  `/onboarding?next=<path>`; profile page `/u/[handle]` (avatar, discipline,
+  bio, skills, links, placeholders for owned assets and recent activity) with
+  an owner-only editor at `/u/[handle]/edit`; private Storage bucket `avatars`
+  (≤ 2 MB, raster images, owner writes `<user_id>/…`, workspace peers read).
+  Migration `onboarding_profiles`: onboarding completion requires name,
+  handle and discipline (DB check), `onboarded_at` stamped by the server and
+  never cleared, column-level update grants on `profiles`, RPCs
+  `is_handle_available`, `my_pending_invites` and `accept_pending_invite`.
+  RLS tests for handles, onboarding, invites and avatars; e2e for onboarding
+  and profile editing.
 
 ### Fixed
 
 - Entities select/update policies now check the row's own columns, so
   `insert … returning` (`.insert().select()`) works for the entity's owner
   (migration `entities_rls_row_checks`).
+- Invite emails are matched case-insensitively (migration
+  `invite_email_case_insensitive`): with `search_path = ''` the citext `=`
+  operator was not resolved and comparisons fell back to case-sensitive text.

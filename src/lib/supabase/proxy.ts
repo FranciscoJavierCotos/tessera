@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { env } from "@/env";
@@ -6,7 +7,8 @@ import type { Database } from "@/lib/db/types";
 
 /**
  * Refreshes the Supabase session for `request` and returns the (possibly
- * refreshed) user id plus a response that carries the updated cookies.
+ * refreshed) user id, a response that carries the updated cookies, and the
+ * request-scoped client (queries run under RLS as that user).
  *
  * Refreshed cookies are written to both the request (so Server Components in
  * this request see them) and the response (so the browser stores them). Any
@@ -46,7 +48,30 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims.sub ?? null;
 
-  return { response, userId };
+  // `response` is reassigned when cookies refresh: read it through a getter.
+  return {
+    get response() {
+      return response;
+    },
+    userId,
+    supabase,
+  };
+}
+
+/**
+ * Whether `userId` finished onboarding (`profiles.onboarded_at` is set).
+ * Fails closed: a failed lookup counts as not onboarded.
+ */
+export async function isOnboarded(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("onboarded_at")
+    .eq("id", userId)
+    .maybeSingle();
+  return !error && data?.onboarded_at != null;
 }
 
 /** Redirects to the relative `target`, keeping refreshed auth cookies. */

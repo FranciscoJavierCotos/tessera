@@ -8,15 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-/** Centered card frame shared by the sign-in and auth error pages. */
+/** Centered card frame shared by the sign-in, auth error and onboarding pages. */
 export function AuthShell({
   title,
   description,
   children,
+  wide = false,
 }: {
   title: string;
   description: React.ReactNode;
   children: React.ReactNode;
+  /** A wider card for multi-step flows. */
+  wide?: boolean;
 }) {
   return (
     <div className="flex flex-1 flex-col">
@@ -31,7 +34,7 @@ export function AuthShell({
         </div>
       </header>
       <main className="flex flex-1 items-center justify-center px-6 py-16">
-        <Card className="w-full max-w-sm">
+        <Card className={wide ? "w-full max-w-lg" : "w-full max-w-sm"}>
           <CardHeader>
             <CardTitle>
               <h1 className="text-lg font-semibold">{title}</h1>

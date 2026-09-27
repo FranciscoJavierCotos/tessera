@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_NEXT_PATH, safeNextPath, signInPath } from "./redirect";
+import {
+  DEFAULT_NEXT_PATH,
+  onboardingPath,
+  safeNextPath,
+  signInPath,
+} from "./redirect";
 
 describe("safeNextPath", () => {
   it.each([
@@ -41,5 +46,16 @@ describe("signInPath", () => {
 
   it("omits `next` for the default destination", () => {
     expect(signInPath("/w")).toBe("/sign-in");
+  });
+});
+
+describe("onboardingPath", () => {
+  it("carries the path in `next`", () => {
+    expect(onboardingPath("/u/ada")).toBe("/onboarding?next=%2Fu%2Fada");
+  });
+
+  it("omits `next` for the default or an unsafe destination", () => {
+    expect(onboardingPath("/w")).toBe("/onboarding");
+    expect(onboardingPath("//evil.example")).toBe("/onboarding");
   });
 });
