@@ -10,7 +10,7 @@ open source later.
 - Architecture & conventions: `docs/specs/architecture.md`
 - Current milestone spec: `docs/specs/m0-foundations.md`
 - GitHub: `FranciscoJavierCotos/tessera` · Supabase Cloud project `tessera`
-  (ref `hnnaljtaatwqvzzcwgpf`, region `eu-west-3`)
+  (ref `ijhtgvmcyrzmkmfiavnu`, region `eu-west-3`)
 
 ## Workflow
 

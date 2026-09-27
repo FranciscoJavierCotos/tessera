@@ -128,7 +128,7 @@ Password for all seed users: `password123` (local only).
 ## F05 — Authentication
 
 - Providers: email magic link (OTP) and GitHub OAuth (Supabase Auth). The GitHub
-  OAuth app callback is `https://hnnaljtaatwqvzzcwgpf.supabase.co/auth/v1/callback`.
+  OAuth app callback is `https://ijhtgvmcyrzmkmfiavnu.supabase.co/auth/v1/callback`.
 - Routes: `/sign-in`, `/auth/callback` (PKCE code exchange), `/auth/error`, sign-out Server Action.
 - `middleware.ts`: refresh session via `@supabase/ssr`; unauthenticated
   `/w/*`, `/u/*`, `/onboarding` → `/sign-in?next=<path>`. `next` must be a

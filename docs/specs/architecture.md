@@ -30,7 +30,7 @@ Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architec
 | Rich text | Tiptap |
 | Tests | Vitest (unit), Vitest + local Supabase (DB/RLS), Playwright + axe (e2e/a11y) |
 | CI | GitHub Actions |
-| Hosting | Vercel + Supabase Cloud (project `tessera`, ref `hnnaljtaatwqvzzcwgpf`, `eu-west-3`) |
+| Hosting | Vercel + Supabase Cloud (project `tessera`, ref `ijhtgvmcyrzmkmfiavnu`, `eu-west-3`) |
 | Package manager | pnpm; Node 22 LTS (`.nvmrc`) |
 | License | Apache-2.0 |
 
