@@ -26,6 +26,7 @@ supabase/.temp/
 
 # misc
 .DS_Store
+*.pem
 Thumbs.db
 *.log
 .vercel/

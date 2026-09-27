@@ -21,22 +21,22 @@ F02 and F03 can run in parallel after F01.
 
 ## F01 — Repository scaffold & tooling
 
-- `pnpm create next-app@15` with App Router, TypeScript, `src/`, ESLint, import alias `@/*`.
+- `pnpm create next-app@16` with App Router, TypeScript, `src/`, ESLint, Tailwind v4, import alias `@/*`.
 - `tsconfig.json`: `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`.
-- `.nvmrc` = `22`; `package.json` `"engines": { "node": ">=22 <23" }`, `"packageManager": "pnpm@<version>"`.
+- `.nvmrc` = `24` (Node 24 LTS); `package.json` `"engines": { "node": ">=24" }`, `"packageManager": "pnpm@<version>"`.
 - Scripts (the contract every later story relies on):
 
-| Script | Command |
-|---|---|
-| `dev` | `next dev` |
-| `build` | `next build` |
-| `lint` | `eslint .` |
-| `typecheck` | `tsc --noEmit` |
-| `format` / `format:check` | `prettier --write .` / `prettier --check .` |
-| `test` | `vitest run` (unit only; `tests/db` excluded) |
-| `test:db` | `vitest run --project db` (added in F04) |
-| `test:e2e` | `playwright test` |
-| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03 |
+| Script                                           | Command                                              |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| `dev`                                            | `next dev`                                           |
+| `build`                                          | `next build`                                         |
+| `lint`                                           | `eslint .`                                           |
+| `typecheck`                                      | `SKIP_ENV_VALIDATION=1 next typegen && tsc --noEmit` |
+| `format` / `format:check`                        | `prettier --write .` / `prettier --check .`          |
+| `test`                                           | `vitest run --project unit` (`tests/db` excluded)    |
+| `test:db`                                        | `vitest run --project db` (added in F04)             |
+| `test:e2e`                                       | `playwright test`                                    |
+| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03                                         |
 
 - `src/env.ts`: Zod schemas split into `server` and `client` (`NEXT_PUBLIC_*`);
   throws a readable error listing missing variables. Initial variables:
@@ -44,6 +44,11 @@ F02 and F03 can run in parallel after F01.
   `SUPABASE_SERVICE_ROLE_KEY` (server), `NEXT_PUBLIC_SITE_URL`.
 - Landing page at `/`: product pitch + "Sign in" link (placeholder until F05).
 - Playwright smoke test: `/` returns 200 and shows the product name.
+- Notes: `next typegen` generates the global `LayoutProps`/`PageProps` types, so
+  it runs before `tsc`. `src/env.ts` is imported by `next.config.ts`, so
+  `dev`/`build`/`start` fail fast on bad config; `SKIP_ENV_VALIDATION=1` bypasses
+  it (typegen, CI jobs without secrets). pnpm `shellEmulator` keeps `VAR=1 cmd`
+  scripts working on Windows.
 
 ## F02 — CI pipeline
 
@@ -72,13 +77,13 @@ create type visibility     as enum ('private','project','workspace');
 
 ### Tables
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `profiles` | `id uuid pk → auth.users on delete cascade`, `handle citext unique`, `display_name`, `discipline`, `bio`, `skills text[]`, `avatar_path`, `links jsonb`, `onboarded_at timestamptz` | `handle` check `^[a-z0-9_]{3,30}$`; row created by trigger on `auth.users` insert with `handle = null` until onboarding |
-| `workspaces` | `id`, `slug citext unique`, `name`, `created_by`, `created_at` | slug check `^[a-z0-9-]{3,40}$` |
-| `workspace_members` | pk `(workspace_id, user_id)`, `role workspace_role`, `joined_at` | index on `user_id` |
-| `invites` | `id`, `workspace_id`, `email citext`, `role`, `token_hash text unique`, `invited_by`, `expires_at`, `accepted_at` | raw token never stored; default expiry `now() + 7 days` |
-| `entities` | `id`, `workspace_id`, `type`, `title`, `visibility`, `project_id uuid null → entities`, `owner_id → profiles`, `created_at`, `updated_at` | check: `visibility = 'project'` ⇒ `project_id is not null`; index `(workspace_id, type)` |
+| Table               | Key columns                                                                                                                                                                         | Notes                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `profiles`          | `id uuid pk → auth.users on delete cascade`, `handle citext unique`, `display_name`, `discipline`, `bio`, `skills text[]`, `avatar_path`, `links jsonb`, `onboarded_at timestamptz` | `handle` check `^[a-z0-9_]{3,30}$`; row created by trigger on `auth.users` insert with `handle = null` until onboarding |
+| `workspaces`        | `id`, `slug citext unique`, `name`, `created_by`, `created_at`                                                                                                                      | slug check `^[a-z0-9-]{3,40}$`                                                                                          |
+| `workspace_members` | pk `(workspace_id, user_id)`, `role workspace_role`, `joined_at`                                                                                                                    | index on `user_id`                                                                                                      |
+| `invites`           | `id`, `workspace_id`, `email citext`, `role`, `token_hash text unique`, `invited_by`, `expires_at`, `accepted_at`                                                                   | raw token never stored; default expiry `now() + 7 days`                                                                 |
+| `entities`          | `id`, `workspace_id`, `type`, `title`, `visibility`, `project_id uuid null → entities`, `owner_id → profiles`, `created_at`, `updated_at`                                           | check: `visibility = 'project'` ⇒ `project_id is not null`; index `(workspace_id, type)`                                |
 
 `search tsv` on `entities` is deferred to C09.
 
@@ -91,24 +96,24 @@ see [architecture §4](architecture.md#rls-helper-functions). Until C01 adds
 
 ### Policies (default-deny: RLS on every table)
 
-| Table | select | insert | update | delete |
-|---|---|---|---|---|
-| `profiles` | self, or shares ≥ 1 workspace | trigger only | self | — |
-| `workspaces` | members | any authenticated user (creator becomes owner via trigger/RPC) | owner/admin | owner |
-| `workspace_members` | members of the same workspace | owner/admin (or invite acceptance RPC) | owner/admin | owner/admin, or self (leave) |
-| `invites` | owner/admin of the workspace | owner/admin | owner/admin (revoke) | owner/admin |
-| `entities` | `can_read_entity(id)` | role ≥ member in `workspace_id`, `owner_id = auth.uid()` | `can_write_entity(id)` | owner or admin |
+| Table               | select                        | insert                                                         | update                 | delete                       |
+| ------------------- | ----------------------------- | -------------------------------------------------------------- | ---------------------- | ---------------------------- |
+| `profiles`          | self, or shares ≥ 1 workspace | trigger only                                                   | self                   | —                            |
+| `workspaces`        | members                       | any authenticated user (creator becomes owner via trigger/RPC) | owner/admin            | owner                        |
+| `workspace_members` | members of the same workspace | owner/admin (or invite acceptance RPC)                         | owner/admin            | owner/admin, or self (leave) |
+| `invites`           | owner/admin of the workspace  | owner/admin                                                    | owner/admin (revoke)   | owner/admin                  |
+| `entities`          | `can_read_entity(id)`         | role ≥ member in `workspace_id`, `owner_id = auth.uid()`       | `can_write_entity(id)` | owner or admin               |
 
 Workspace creation goes through RPC `create_workspace(name, slug)` (security
 definer) that inserts the workspace and the owner membership atomically.
 
 ### Seed (`supabase/seed.sql`)
 
-| User | Email | Workspace | Role |
-|---|---|---|---|
-| Alice (A) | `alice@tessera.test` | `acme` | owner |
-| Val (V) | `val@tessera.test` | `acme` | viewer |
-| Bob (B) | `bob@tessera.test` | `globex` | owner |
+| User      | Email                | Workspace | Role   |
+| --------- | -------------------- | --------- | ------ |
+| Alice (A) | `alice@tessera.test` | `acme`    | owner  |
+| Val (V)   | `val@tessera.test`   | `acme`    | viewer |
+| Bob (B)   | `bob@tessera.test`   | `globex`  | owner  |
 
 Plus: one `workspace` entity and one `private` entity (owner Alice) in `acme`.
 Password for all seed users: `password123` (local only).
@@ -128,9 +133,9 @@ Password for all seed users: `password123` (local only).
 ## F05 — Authentication
 
 - Providers: email magic link (OTP) and GitHub OAuth (Supabase Auth). The GitHub
-  OAuth app callback is `https://hnnaljtaatwqvzzcwgpf.supabase.co/auth/v1/callback`.
+  OAuth app callback is `https://ijhtgvmcyrzmkmfiavnu.supabase.co/auth/v1/callback`.
 - Routes: `/sign-in`, `/auth/callback` (PKCE code exchange), `/auth/error`, sign-out Server Action.
-- `middleware.ts`: refresh session via `@supabase/ssr`; unauthenticated
+- `src/proxy.ts` (Next.js 16 rename of `middleware.ts`): refresh session via `@supabase/ssr`; unauthenticated
   `/w/*`, `/u/*`, `/onboarding` → `/sign-in?next=<path>`. `next` must be a
   same-origin relative path (open-redirect guard).
 - Error copy for: expired/used link, OAuth denied, email rate limited.
@@ -143,7 +148,7 @@ Password for all seed users: `password123` (local only).
   DB-enforced uniqueness) → discipline → create or join a workspace (join via
   pending invite for the user's email).
 - Guard: signed-in users with `profiles.onboarded_at is null` are redirected
-  to `/onboarding` from every app route (middleware or layout).
+  to `/onboarding` from every app route (proxy or layout).
 - `/u/[handle]`: avatar (Storage bucket `avatars`, path `<user_id>/…`, owner-write
   policy, ≤ 2 MB, image types only), bio, skills tags, links; edit only for owner.
 - Placeholders: "Owned assets" (C02) and "Recent activity" (C07).

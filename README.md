@@ -24,7 +24,7 @@ through `@mentions` and backlinks.
 
 ## Stack
 
-TypeScript · Next.js 15 (App Router) · Supabase (Postgres, Auth, Realtime,
+TypeScript · Next.js 16 (App Router) · Supabase (Postgres, Auth, Realtime,
 Storage, RLS) · Tailwind v4 + shadcn/ui · React Flow · Tiptap · Zod · Vitest ·
 Playwright · GitHub Actions · Vercel.
 
@@ -36,9 +36,32 @@ Playwright · GitHub Actions · Vercel.
 
 ## Local setup
 
-Arrives with [F01](https://github.com/FranciscoJavierCotos/tessera/issues/1) and
-[F03](https://github.com/FranciscoJavierCotos/tessera/issues/3). Prerequisites:
-Node 22 LTS, pnpm, Docker Desktop.
+Prerequisites: **Node 24 LTS** (see `.nvmrc`), **pnpm** (version pinned in
+`package.json` → `packageManager`), and Docker Desktop (for the local Supabase
+stack, arriving with [F03](https://github.com/FranciscoJavierCotos/tessera/issues/3)).
+
+```bash
+pnpm install
+cp .env.example .env.local   # then fill in the values
+pnpm dev                     # http://localhost:3000
+```
+
+The app validates its environment at startup (`src/env.ts`) and exits with a
+list of missing or invalid variables.
+
+### Scripts
+
+| Script                         | What it does                                         |
+| ------------------------------ | ---------------------------------------------------- |
+| `pnpm dev`                     | Dev server                                           |
+| `pnpm build` / `pnpm start`    | Production build / serve it                          |
+| `pnpm lint`                    | ESLint                                               |
+| `pnpm typecheck`               | Generate Next.js route types, then `tsc --noEmit`    |
+| `pnpm format` / `format:check` | Prettier write / check                               |
+| `pnpm test`                    | Unit tests (Vitest)                                  |
+| `pnpm test:e2e`                | End-to-end tests (Playwright; starts the dev server) |
+
+First e2e run: `pnpm exec playwright install chromium`.
 
 ## License
 

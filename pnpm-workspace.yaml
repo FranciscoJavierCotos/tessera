@@ -1,0 +1,6 @@
+# POSIX-style scripts (e.g. `VAR=1 cmd`) on every OS, including Windows.
+shellEmulator: true
+
+allowBuilds:
+  sharp: false
+  unrs-resolver: false

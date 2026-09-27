@@ -17,22 +17,22 @@ Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architec
 
 ## 2. Stack
 
-| Concern | Choice |
-|---|---|
-| Language | TypeScript, `strict: true`, end to end |
-| Web | Next.js 15 (App Router, RSC, Server Actions) |
-| Data / Auth / Realtime / Storage | Supabase (Postgres 15+), `@supabase/ssr` |
-| Migrations | Supabase CLI, `supabase/migrations/*.sql`, local stack via Docker |
-| DB types | `supabase gen types typescript` → `src/lib/db/types.ts` (committed) |
-| Validation | Zod (forms, server actions, env, public API) |
-| UI | Tailwind CSS v4, shadcn/ui (Radix), lucide-react |
-| Graphs & canvases | React Flow (`@xyflow/react`) + elkjs |
-| Rich text | Tiptap |
-| Tests | Vitest (unit), Vitest + local Supabase (DB/RLS), Playwright + axe (e2e/a11y) |
-| CI | GitHub Actions |
-| Hosting | Vercel + Supabase Cloud (project `tessera`, ref `hnnaljtaatwqvzzcwgpf`, `eu-west-3`) |
-| Package manager | pnpm; Node 22 LTS (`.nvmrc`) |
-| License | Apache-2.0 |
+| Concern                          | Choice                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| Language                         | TypeScript, `strict: true`, end to end                                               |
+| Web                              | Next.js 16 (App Router, RSC, Server Actions)                                         |
+| Data / Auth / Realtime / Storage | Supabase (Postgres 15+), `@supabase/ssr`                                             |
+| Migrations                       | Supabase CLI, `supabase/migrations/*.sql`, local stack via Docker                    |
+| DB types                         | `supabase gen types typescript` → `src/lib/db/types.ts` (committed)                  |
+| Validation                       | Zod (forms, server actions, env, public API)                                         |
+| UI                               | Tailwind CSS v4, shadcn/ui (Radix), lucide-react                                     |
+| Graphs & canvases                | React Flow (`@xyflow/react`) + elkjs                                                 |
+| Rich text                        | Tiptap                                                                               |
+| Tests                            | Vitest (unit), Vitest + local Supabase (DB/RLS), Playwright + axe (e2e/a11y)         |
+| CI                               | GitHub Actions                                                                       |
+| Hosting                          | Vercel + Supabase Cloud (project `tessera`, ref `ijhtgvmcyrzmkmfiavnu`, `eu-west-3`) |
+| Package manager                  | pnpm; Node 24 LTS (`.nvmrc`)                                                         |
+| License                          | Apache-2.0                                                                           |
 
 Single Next.js app (not a monorepo) until a second package exists (SDK, O04).
 
@@ -52,11 +52,11 @@ pg_cron ─► SLA / staleness checks ─► activity_events → notifications
 
 ### Supabase clients (`src/lib/supabase/`)
 
-| Client | Where | Key | Purpose |
-|---|---|---|---|
-| `createBrowserClient` | Client Components | publishable (anon) | Realtime, client-side reads |
-| `createServerClient` | RSC, Server Actions, route handlers | publishable + user cookies | All normal app reads/writes, under RLS |
-| `createServiceClient` | `/api/v1/*`, admin scripts, tests | service role | **Server-only.** Must always be wrapped by a helper that injects `workspace_id`; never imported from client code (enforced by `server-only`) |
+| Client                | Where                               | Key                        | Purpose                                                                                                                                      |
+| --------------------- | ----------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createBrowserClient` | Client Components                   | publishable (anon)         | Realtime, client-side reads                                                                                                                  |
+| `createServerClient`  | RSC, Server Actions, route handlers | publishable + user cookies | All normal app reads/writes, under RLS                                                                                                       |
+| `createServiceClient` | `/api/v1/*`, admin scripts, tests   | service role               | **Server-only.** Must always be wrapped by a helper that injects `workspace_id`; never imported from client code (enforced by `server-only`) |
 
 ## 4. Core data model
 
@@ -82,18 +82,18 @@ and the entity row's `type` must match the table (check via trigger or a
 
 ### Visibility & roles
 
-| Visibility | Who can read |
-|---|---|
-| `private` | `owner_id` only |
-| `project` | members of `project_id` (plus workspace owners/admins) |
-| `workspace` | every member of the workspace |
+| Visibility  | Who can read                                           |
+| ----------- | ------------------------------------------------------ |
+| `private`   | `owner_id` only                                        |
+| `project`   | members of `project_id` (plus workspace owners/admins) |
+| `workspace` | every member of the workspace                          |
 
-| Workspace role | Can |
-|---|---|
-| `owner` | everything, incl. delete workspace, manage owners |
-| `admin` | manage members & invites, everything a member can |
-| `member` | create entities; write what they can read |
-| `viewer` | read-only everywhere |
+| Workspace role | Can                                               |
+| -------------- | ------------------------------------------------- |
+| `owner`        | everything, incl. delete workspace, manage owners |
+| `admin`        | manage members & invites, everything a member can |
+| `member`       | create entities; write what they can read         |
+| `viewer`       | read-only everywhere                              |
 
 Invariant: a workspace always has ≥ 1 owner (DB-enforced, F07).
 
