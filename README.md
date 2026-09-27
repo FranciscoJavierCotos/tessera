@@ -33,6 +33,7 @@ Playwright · GitHub Actions · Vercel.
 - [Roadmap (MVP → v1.0)](docs/roadmap.md)
 - [Architecture spec](docs/specs/architecture.md)
 - [M0 Foundations spec](docs/specs/m0-foundations.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Local setup
 
