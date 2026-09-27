@@ -1,5 +1,5 @@
-/** App areas that require a session (`/w/*`, `/u/*`, `/onboarding`). */
-const PROTECTED_PREFIXES = ["/w", "/u", "/onboarding"];
+/** App areas that require a session (`/w/*`, `/u/*`, `/invite/*`, `/onboarding`). */
+const PROTECTED_PREFIXES = ["/w", "/u", "/invite", "/onboarding"];
 
 /** Pages a signed-in user has no reason to see. */
 const GUEST_ONLY_PATHS = ["/sign-in"];

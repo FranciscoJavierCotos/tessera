@@ -238,6 +238,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { token: string }; Returns: string }
       accept_pending_invite: { Args: { invite_id: string }; Returns: string }
       create_workspace: {
         Args: { name: string; slug: string }
@@ -254,6 +255,20 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      invite_preview: {
+        Args: { token: string }
+        Returns: {
+          email_matches: boolean
+          expires_at: string
+          invited_by_name: string
+          is_member: boolean
+          role: Database["public"]["Enums"]["workspace_role"]
+          status: string
+          workspace_id: string
+          workspace_name: string
+          workspace_slug: string
+        }[]
       }
       is_handle_available: { Args: { handle: string }; Returns: boolean }
       my_pending_invites: {
