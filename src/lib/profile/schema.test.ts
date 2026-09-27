@@ -65,7 +65,7 @@ describe("workspaceSchema", () => {
     });
   });
 
-  it.each(["ac", "acme_data", "acme data", "a".repeat(41)])(
+  it.each(["ac", "acme_data", "acme data", "a".repeat(41), "new", "NEW"])(
     "rejects slug %j",
     (slug) => {
       expect(workspaceSchema.safeParse({ name: "Acme", slug }).success).toBe(

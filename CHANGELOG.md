@@ -55,6 +55,22 @@ All notable changes to this project are documented here. The format follows
   `is_handle_available`, `my_pending_invites` and `accept_pending_invite`.
   RLS tests for handles, onboarding, invites and avatars; e2e for onboarding
   and profile editing.
+- Workspaces, membership & invites (F07): `/w` lists the user's workspaces
+  (and pending invites) and redirects to the last used one (cookie written
+  by the workspace layout on visits; `?all` shows the list); `/w/new` creates a workspace;
+  `/w/[workspace]` home with a workspace switcher in the header; members page
+  `/w/[workspace]/settings/members` to invite by email, change roles, remove
+  members, leave, and revoke pending invites. Invites use a 32-byte random
+  token whose sha256 hash is stored; the link `/invite/<token>` is emailed
+  through a pluggable `Mailer` (`ConsoleMailer` for now) and shown once to the
+  inviter. `/invite/[token]` accepts it (email must match, not expired, not
+  used). Migration `workspaces_membership_invites`: last-owner guard
+  (constraint trigger rejecting any update/delete that leaves a workspace
+  without an owner), memberships can only change `role`, reserved slug `new`,
+  RPCs `invite_preview(token)` and `accept_invite(token)`. RLS tests for
+  roles (admin invites, member cannot, viewer read-only), the last-owner guard
+  and token invites; e2e for inviting, accepting, managing members and
+  switching workspaces.
 
 ### Fixed
 

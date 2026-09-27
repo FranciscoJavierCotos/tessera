@@ -65,7 +65,12 @@ test.describe("signed in", () => {
     await page.goto(await magicLinkPath(user.email));
 
     await expect(page).toHaveURL("/w");
-    await expect(page.getByText(user.email)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Workspaces", level: 1 }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("You are not in a workspace yet"),
+    ).toBeVisible();
 
     // Signed-in users skip the sign-in page.
     await page.goto("/sign-in");

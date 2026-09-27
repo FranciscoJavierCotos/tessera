@@ -25,6 +25,8 @@ export const DISCIPLINE_DESCRIPTIONS: Record<Discipline, string> = {
 // Mirrors the DB checks on `profiles` and `workspaces` (the DB is the gate).
 export const HANDLE_PATTERN = /^[a-z0-9_]{3,30}$/;
 export const SLUG_PATTERN = /^[a-z0-9-]{3,40}$/;
+/** Workspace slugs taken by static routes under `/w` (DB check too). */
+export const RESERVED_SLUGS: readonly string[] = ["new"];
 export const MAX_SKILLS = 20;
 export const MAX_LINKS = 5;
 
@@ -62,9 +64,16 @@ export const workspaceSchema = z.object({
     .trim()
     .min(1, { error: "Name your workspace." })
     .max(100, { error: "Use at most 100 characters." }),
-  slug: z.string().trim().toLowerCase().regex(SLUG_PATTERN, {
-    error: "Use 3–40 lowercase letters, numbers and dashes.",
-  }),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(SLUG_PATTERN, {
+      error: "Use 3–40 lowercase letters, numbers and dashes.",
+    })
+    .refine((slug) => !RESERVED_SLUGS.includes(slug), {
+      error: "That URL is reserved. Try another.",
+    }),
 });
 
 const skillSchema = z

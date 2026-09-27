@@ -3,12 +3,16 @@ import { describe, expect, it } from "vitest";
 import { isGuestOnlyPath, isOnboardingPath, isProtectedPath } from "./routes";
 
 describe("isProtectedPath", () => {
-  it.each(["/w", "/w/acme", "/w/acme/settings", "/u/ada", "/onboarding"])(
-    "protects %s",
-    (path) => {
-      expect(isProtectedPath(path)).toBe(true);
-    },
-  );
+  it.each([
+    "/w",
+    "/w/acme",
+    "/w/acme/settings",
+    "/u/ada",
+    "/invite/abc",
+    "/onboarding",
+  ])("protects %s", (path) => {
+    expect(isProtectedPath(path)).toBe(true);
+  });
 
   it.each(["/", "/sign-in", "/auth/callback", "/auth/error", "/wiki", "/us"])(
     "leaves %s public",

@@ -226,6 +226,33 @@ abandoned uploads).
 - Workspace switcher in the shell.
 - RLS tests: admin can invite; member cannot; viewer read-only; last-owner guard.
 
+### Routes
+
+| Route                             | Purpose                                                                                                                                                                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/w`                              | Workspaces list + pending invites; redirects to the last used workspace (cookie `tessera-last-workspace`, written client-side by the workspace layout on real visits; the proxy cannot tell prefetches apart) unless `?all` |
+| `/w/new`                          | Create a workspace (`create_workspace`), then open it                                                                                                                                                                       |
+| `/w/[workspace]`                  | Workspace home (placeholder until F08); the layout 404s for non-members and renders the switcher                                                                                                                            |
+| `/w/[workspace]/settings/members` | Everyone sees the list; owners/admins invite, change roles, remove, revoke invites; anyone can leave                                                                                                                        |
+| `/invite/[token]`                 | Preview and accept an invite (protected route; onboarding runs first for new users)                                                                                                                                         |
+
+The invite link is shown once to the inviter after creation (only the hash is
+stored), so invites work while the mailer only logs to the console.
+
+### Database (migration `workspaces_membership_invites`)
+
+| Object                             | Rule                                                                                                                                                                                                           |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaces_slug_not_reserved`     | slug `new` is reserved (static route `/w/new`)                                                                                                                                                                 |
+| `workspace_members` grants         | `authenticated` may update only `role` (a membership never moves between users or workspaces)                                                                                                                  |
+| `workspace_members_keep_an_owner`  | constraint trigger: rejects (`23514`) an update/delete that leaves the workspace without an owner; locks the workspace row to serialize concurrent changes; skipped when the workspace itself is being deleted |
+| `private.hash_invite_token(token)` | hex `sha256` of the UTF-8 token (same as `hashInviteToken` in `src/lib/workspace/invite-token.ts`)                                                                                                             |
+| `invite_preview(token)`            | workspace, role, inviter, expiry, `status` (`pending`/`expired`/`accepted`), `email_matches`, `is_member`                                                                                                      |
+| `accept_invite(token)`             | finds the invite by hash and runs `private.accept_invite_row` (email, expiry, not accepted); returns the workspace id                                                                                          |
+
+A new invite to the same email replaces the pending one. Errors map to plain
+copy in the UI (last owner → "make someone else an owner first").
+
 ## F08 — App shell & design system baseline
 
 - Routes: `/w/[workspace]/{home,projects,catalog,docs,settings}` each render an
