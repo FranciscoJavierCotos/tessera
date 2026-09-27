@@ -37,14 +37,34 @@ Playwright · GitHub Actions · Vercel.
 ## Local setup
 
 Prerequisites: **Node 24 LTS** (see `.nvmrc`), **pnpm** (version pinned in
-`package.json` → `packageManager`), and Docker Desktop (for the local Supabase
-stack, arriving with [F03](https://github.com/FranciscoJavierCotos/tessera/issues/3)).
+`package.json` → `packageManager`), and **Docker Desktop** (running) for the
+local Supabase stack. The Supabase CLI is a dev dependency; no global install
+is needed.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # then fill in the values
+pnpm db:start                # first run pulls the Supabase Docker images
+pnpm supabase status         # API URL, publishable and service-role keys
+cp .env.example .env.local   # then fill in the values from `status`
 pnpm dev                     # http://localhost:3000
 ```
+
+### Database
+
+The schema lives in `supabase/migrations` (forward-only, created with
+`pnpm supabase migration new <name>`). `pnpm db:reset` rebuilds the local
+database from the migrations and loads `supabase/seed.sql`:
+
+| User                 | Workspace | Role   |
+| -------------------- | --------- | ------ |
+| `alice@tessera.test` | `acme`    | owner  |
+| `val@tessera.test`   | `acme`    | viewer |
+| `bob@tessera.test`   | `globex`  | owner  |
+
+Password for every seed user: `password123` (local only). After changing the
+schema, run `pnpm db:types` to regenerate `src/lib/db/types.ts` and commit it.
+Row level security is enabled on every table; see the
+[architecture spec](docs/specs/architecture.md#4-core-data-model).
 
 The app validates its environment at startup (`src/env.ts`) and exits with a
 list of missing or invalid variables.
@@ -60,6 +80,10 @@ list of missing or invalid variables.
 | `pnpm format` / `format:check` | Prettier write / check                               |
 | `pnpm test`                    | Unit tests (Vitest)                                  |
 | `pnpm test:e2e`                | End-to-end tests (Playwright; starts the dev server) |
+| `pnpm db:start` / `db:stop`    | Start / stop the local Supabase stack (Docker)       |
+| `pnpm db:reset`                | Recreate the local DB from migrations + seed         |
+| `pnpm db:types`                | Regenerate `src/lib/db/types.ts` from the local DB   |
+| `pnpm db:lint`                 | Lint the local DB schema (`supabase db lint`)        |
 
 First e2e run: `pnpm exec playwright install chromium`.
 

@@ -104,8 +104,15 @@ see [architecture §4](architecture.md#rls-helper-functions). Until C01 adds
 | `invites`           | owner/admin of the workspace  | owner/admin                                                    | owner/admin (revoke)   | owner/admin                  |
 | `entities`          | `can_read_entity(id)`         | role ≥ member in `workspace_id`, `owner_id = auth.uid()`       | `can_write_entity(id)` | owner or admin               |
 
-Workspace creation goes through RPC `create_workspace(name, slug)` (security
-definer) that inserts the workspace and the owner membership atomically.
+Workspace creation goes through RPC `create_workspace(name, slug)`, which
+inserts the workspace and returns it; the `on_workspace_created` trigger
+(security definer, in `private`) adds the creator as `owner` in the same
+transaction. The RPC itself is `security invoker`, so the insert is checked by
+RLS as the caller and no `security definer` function is exposed through the API.
+
+Admins manage non-owner memberships and invites only: granting, changing or
+removing the `owner` role requires an owner. `anon` has no privileges on any
+table; `profiles` rows are only inserted by the `auth.users` trigger.
 
 ### Seed (`supabase/seed.sql`)
 
