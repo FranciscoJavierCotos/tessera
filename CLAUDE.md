@@ -6,6 +6,9 @@ Collaborative workspace for data teams (catalog, lineage, quality, incidents,
 modeling, ADRs, docs) joined by one entity graph. Portfolio project first,
 open source later.
 
+Dont add the Co-Authored-By tagg in github PRs, issues,etc..
+Dont add the Generated with claude text either.
+
 ## Source of truth
 
 - Plan: `docs/roadmap.md` (every story ID like `F03`, `C05` = one GitHub issue)

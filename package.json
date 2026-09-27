@@ -16,11 +16,12 @@
     "format:check": "prettier --check .",
     "test": "vitest run --project unit",
     "test:watch": "vitest --project unit",
+    "test:db": "vitest run --project db",
     "test:e2e": "playwright test",
     "supabase": "supabase",
     "db:link": "supabase link --project-ref ijhtgvmcyrzmkmfiavnu",
     "db:push": "supabase db push --linked",
-    "db:lint": "supabase db lint --linked --level warning",
+    "db:lint": "supabase db lint --linked --level warning --fail-on warning",
     "db:seed": "supabase db push --linked --include-seed",
     "db:types": "supabase gen types typescript --project-id ijhtgvmcyrzmkmfiavnu --schema public > src/lib/db/types.ts"
   },
