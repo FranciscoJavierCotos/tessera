@@ -25,3 +25,16 @@ All notable changes to this project are documented here. The format follows
   creator becomes owner (trigger + `create_workspace` RPC); idempotent dev seed
   with three users and two workspaces; generated DB types and typed server/browser
   Supabase clients (`@supabase/ssr`).
+- RLS test harness (F04): Vitest `db` project (`pnpm test:db`) running
+  `tests/db/**` against the Supabase Cloud project with per-run fixtures (users
+  A, B, V and their workspaces/entities created through the Admin API and
+  deleted afterwards), helpers `asUser`, `asAnon`, `expectDenied`, and cases
+  for cross-workspace isolation, viewer read-only, private entities, anonymous
+  access and permitted writes; CI job `db` (serialized) runs the suite and
+  `supabase db lint --linked` (now failing on warnings).
+
+### Fixed
+
+- Entities select/update policies now check the row's own columns, so
+  `insert … returning` (`.insert().select()`) works for the entity's owner
+  (migration `entities_rls_row_checks`).
