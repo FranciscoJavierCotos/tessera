@@ -179,12 +179,37 @@ Automated tests do not depend on it.
 
 - `/onboarding` steps: display name → handle (live availability check,
   DB-enforced uniqueness) → discipline → create or join a workspace (join via
-  pending invite for the user's email).
+  pending invite for the user's email). Steps 1–3 save the profile; step 4
+  creates a workspace (`create_workspace`), accepts an invite, or continues
+  with an existing membership, then stamps `onboarded_at` and goes to `next`.
 - Guard: signed-in users with `profiles.onboarded_at is null` are redirected
-  to `/onboarding` from every app route (proxy or layout).
+  from every app route (`/w/*`, `/u/*`) to `/onboarding?next=<path>` by
+  `src/proxy.ts` (one `profiles` lookup per app request; a failed lookup
+  counts as not onboarded). Onboarded users skip `/onboarding`.
 - `/u/[handle]`: avatar (Storage bucket `avatars`, path `<user_id>/…`, owner-write
-  policy, ≤ 2 MB, image types only), bio, skills tags, links; edit only for owner.
+  policy, ≤ 2 MB, image types only), bio, skills tags, links; edit only for owner
+  at `/u/[handle]/edit`. Profiles of users who share no workspace with the
+  viewer are hidden (404) by RLS.
 - Placeholders: "Owned assets" (C02) and "Recent activity" (C07).
+
+### Database (migrations `onboarding_profiles`, `invite_email_case_insensitive`)
+
+| Object                                 | Rule                                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `profiles` checks                      | `onboarded_at` requires `handle`, non-blank `display_name`, `discipline`; `avatar_path` starts with `<id>/`; ≤ 20 skills; ≤ 10 links |
+| `profiles_stamp_onboarded_at` trigger  | `onboarded_at` is set to `now()` once and can never be cleared                                                                       |
+| `profiles` grants                      | `authenticated` may update only `handle, display_name, discipline, bio, skills, avatar_path, links, onboarded_at`                    |
+| `is_handle_available(handle)`          | true when well-formed and not taken by another user (works without read access to other profiles)                                    |
+| `my_pending_invites()`                 | unexpired, unaccepted invites for the caller's email (case-insensitive) to workspaces they are not in                                |
+| `accept_pending_invite(invite_id)`     | verifies email, expiry and not-accepted; adds the membership with the invite's role; marks the invite accepted                       |
+| bucket `avatars`                       | private; 2 MB; `image/png`, `image/jpeg`, `image/webp`, `image/gif` (no SVG)                                                         |
+| `storage.objects` policies (`avatars`) | insert/update/delete: first folder = `auth.uid()`; select: owner or a user sharing a workspace (`private.can_read_avatar`)           |
+
+The public RPCs are `security invoker` wrappers over `security definer`
+functions in `private` (`private.accept_invite_row` is reused by F07's
+token-based `accept_invite`). Avatars are served through short-lived signed
+URLs. Saving the profile removes the user's other avatar objects (replaced or
+abandoned uploads).
 
 ## F07 — Workspaces, membership & invites
 

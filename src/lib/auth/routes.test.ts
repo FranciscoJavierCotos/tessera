@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isGuestOnlyPath, isProtectedPath } from "./routes";
+import { isGuestOnlyPath, isOnboardingPath, isProtectedPath } from "./routes";
 
 describe("isProtectedPath", () => {
   it.each(["/w", "/w/acme", "/w/acme/settings", "/u/ada", "/onboarding"])(
@@ -23,5 +23,14 @@ describe("isGuestOnlyPath", () => {
     expect(isGuestOnlyPath("/sign-in")).toBe(true);
     expect(isGuestOnlyPath("/auth/callback")).toBe(false);
     expect(isGuestOnlyPath("/w")).toBe(false);
+  });
+});
+
+describe("isOnboardingPath", () => {
+  it("matches the onboarding flow only", () => {
+    expect(isOnboardingPath("/onboarding")).toBe(true);
+    expect(isOnboardingPath("/onboarding/workspace")).toBe(true);
+    expect(isOnboardingPath("/onboardingx")).toBe(false);
+    expect(isOnboardingPath("/w")).toBe(false);
   });
 });

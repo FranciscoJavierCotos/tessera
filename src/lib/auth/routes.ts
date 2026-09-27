@@ -15,3 +15,10 @@ export function isProtectedPath(pathname: string): boolean {
 export function isGuestOnlyPath(pathname: string): boolean {
   return GUEST_ONLY_PATHS.includes(pathname);
 }
+
+/** The onboarding flow; every other protected path requires finishing it. */
+export const ONBOARDING_PATH = "/onboarding";
+
+export function isOnboardingPath(pathname: string): boolean {
+  return matchesPrefix(pathname, ONBOARDING_PATH);
+}

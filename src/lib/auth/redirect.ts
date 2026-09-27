@@ -36,3 +36,11 @@ export function signInPath(path: string): string {
     ? "/sign-in"
     : `/sign-in?next=${encodeURIComponent(next)}`;
 }
+
+/** The onboarding URL that continues to `path` once the user is done. */
+export function onboardingPath(path: string): string {
+  const next = safeNextPath(path);
+  return next === DEFAULT_NEXT_PATH
+    ? "/onboarding"
+    : `/onboarding?next=${encodeURIComponent(next)}`;
+}
