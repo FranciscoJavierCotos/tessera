@@ -4,8 +4,22 @@ import {
   assignableRoles,
   canManageMember,
   canManageMembers,
+  hasRole,
   isLastOwner,
 } from "./roles";
+
+describe("hasRole", () => {
+  it.each([
+    ["owner", "admin", true],
+    ["admin", "admin", true],
+    ["member", "admin", false],
+    ["viewer", "viewer", true],
+    ["viewer", "member", false],
+    [null, "viewer", false],
+  ] as const)("%s ≥ %s → %s", (role, min, expected) => {
+    expect(hasRole(role, min)).toBe(expected);
+  });
+});
 
 describe("canManageMembers", () => {
   it.each([

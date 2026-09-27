@@ -3,6 +3,7 @@
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -54,11 +55,12 @@ export function MemberList({
   const [pending, startTransition] = useTransition();
   const ownerCount = members.filter((m) => m.role === "owner").length;
 
-  const run = (action: () => Promise<ActionResult>) => {
+  const run = (action: () => Promise<ActionResult>, success: string) => {
     setError(undefined);
     startTransition(async () => {
       const result = await action();
-      if (!result.ok) setError(result.message);
+      if (result.ok) toast.success(success);
+      else setError(result.message);
     });
   };
 
@@ -124,12 +126,14 @@ export function MemberList({
                   value={member.role}
                   disabled={pending}
                   onValueChange={(role) =>
-                    run(() =>
-                      changeMemberRole({
-                        workspaceId,
-                        userId: member.userId,
-                        role: role as WorkspaceRole,
-                      }),
+                    run(
+                      () =>
+                        changeMemberRole({
+                          workspaceId,
+                          userId: member.userId,
+                          role: role as WorkspaceRole,
+                        }),
+                      `${label} is now ${ROLE_LABELS[role as WorkspaceRole].toLowerCase()}`,
                     )
                   }
                 >
@@ -170,7 +174,12 @@ export function MemberList({
                     description="You lose access right away. Someone will have to invite you again."
                     confirmLabel="Leave workspace"
                     disabled={pending || lastOwner}
-                    onConfirm={() => run(() => leaveWorkspace(workspaceId))}
+                    onConfirm={() =>
+                      run(
+                        () => leaveWorkspace(workspaceId),
+                        "You left the workspace",
+                      )
+                    }
                   />
                 ) : (
                   canManage &&
@@ -183,8 +192,13 @@ export function MemberList({
                       confirmLabel="Remove member"
                       disabled={pending}
                       onConfirm={() =>
-                        run(() =>
-                          removeMember({ workspaceId, userId: member.userId }),
+                        run(
+                          () =>
+                            removeMember({
+                              workspaceId,
+                              userId: member.userId,
+                            }),
+                          `${label} was removed`,
                         )
                       }
                     />

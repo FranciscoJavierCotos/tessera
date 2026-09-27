@@ -6,6 +6,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/profile/server";
 import { inviteTokenSchema } from "@/lib/workspace/invite-token";
+import { workspaceHome } from "@/lib/workspace/paths";
 import { ROLE_LABELS } from "@/lib/workspace/roles";
 
 import { AcceptInviteForm } from "./accept-form";
@@ -53,7 +54,7 @@ export default async function InvitePage({
         description="You are already a member of this workspace."
       >
         <Button asChild>
-          <Link href={`/w/${invite.workspace_slug}`}>
+          <Link href={workspaceHome(invite.workspace_slug)}>
             Open {invite.workspace_name}
           </Link>
         </Button>

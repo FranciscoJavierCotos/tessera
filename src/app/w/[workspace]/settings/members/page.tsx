@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { PageHeader } from "@/components/page-header";
+import { Page } from "@/components/shell/page";
 import { avatarUrl, requireUser } from "@/lib/profile/server";
+import { workspaceMetadata } from "@/lib/workspace/metadata";
 import { assignableRoles, canManageMembers } from "@/lib/workspace/roles";
 import { getMyWorkspace } from "@/lib/workspace/server";
 
@@ -9,12 +11,7 @@ import { InviteForm } from "./invite-form";
 import { InviteList } from "./invite-list";
 import { MemberList } from "./member-list";
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/w/[workspace]/settings/members">): Promise<Metadata> {
-  const workspace = await getMyWorkspace((await params).workspace);
-  return { title: `Members · ${workspace?.name ?? "Workspace"} · Tessera` };
-}
+export const generateMetadata = workspaceMetadata("Members");
 
 /** `YYYY-MM-DD` in UTC (stable across server and client). */
 function day(timestamp: string) {
@@ -62,15 +59,15 @@ export default async function MembersPage({
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
-        <p className="text-sm text-muted-foreground">
-          {canManage
+    <Page size="narrow">
+      <PageHeader
+        title="Members"
+        description={
+          canManage
             ? `Invite people to ${workspace.name} and manage what they can do.`
-            : `People in ${workspace.name}. Owners and admins manage members.`}
-        </p>
-      </div>
+            : `People in ${workspace.name}. Owners and admins manage members.`
+        }
+      />
 
       {canManage && (
         <InviteForm
@@ -105,6 +102,6 @@ export default async function MembersPage({
           }))}
         />
       )}
-    </main>
+    </Page>
   );
 }

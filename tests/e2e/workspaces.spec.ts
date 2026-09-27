@@ -1,16 +1,5 @@
-import { expect, test, uniqueId, type TestUser } from "./support/auth";
-
-type Admin = Parameters<Parameters<typeof test>[2]>[0]["admin"];
-
-/** A workspace created by `owner` (the DB trigger makes them owner). */
-async function createWorkspace(admin: Admin, owner: TestUser, name: string) {
-  const slug = `e2e-${uniqueId()}`;
-  const { error } = await admin
-    .from("workspaces")
-    .insert({ name, slug, created_by: owner.id });
-  if (error) throw new Error(`workspace: ${error.message}`);
-  return slug;
-}
+import { expect, test, uniqueId } from "./support/auth";
+import { createWorkspace } from "./support/workspace";
 
 test.describe("workspaces", () => {
   test("an owner invites a teammate, who accepts; the owner manages them", async ({
@@ -50,7 +39,7 @@ test.describe("workspaces", () => {
       inviteePage.getByRole("heading", { name: "Join Invite Flow" }),
     ).toBeVisible();
     await inviteePage.getByRole("button", { name: "Join Invite Flow" }).click();
-    await expect(inviteePage).toHaveURL(`/w/${slug}`);
+    await expect(inviteePage).toHaveURL(`/w/${slug}/home`);
 
     // Both see each other in the members list.
     await inviteePage.goto(membersPath);
@@ -134,7 +123,7 @@ test.describe("workspaces", () => {
     await page.getByLabel("Workspace name").fill("Beta Team");
     await page.getByLabel("URL").fill(second);
     await page.getByRole("button", { name: "Create workspace" }).click();
-    await expect(page).toHaveURL(`/w/${second}`);
+    await expect(page).toHaveURL(`/w/${second}/home`);
     await expect(
       page.getByRole("heading", { name: "Beta Team", level: 1 }),
     ).toBeVisible();
@@ -144,7 +133,7 @@ test.describe("workspaces", () => {
       .getByRole("button", { name: "Workspace: Beta Team. Switch workspace" })
       .click();
     await page.getByRole("menuitem", { name: /Alpha Team/ }).click();
-    await expect(page).toHaveURL(`/w/${first}`);
+    await expect(page).toHaveURL(`/w/${first}/home`);
     await expect(
       page.getByRole("heading", { name: "Alpha Team", level: 1 }),
     ).toBeVisible();
@@ -159,7 +148,7 @@ test.describe("workspaces", () => {
 
     // `/w` returns to the last used workspace; `?all` lists them.
     await page.goto("/w");
-    await expect(page).toHaveURL(`/w/${first}`);
+    await expect(page).toHaveURL(`/w/${first}/home`);
     await page.goto("/w?all=1");
     await expect(page.getByRole("link", { name: /Beta Team/ })).toBeVisible();
   });

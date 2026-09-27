@@ -71,6 +71,21 @@ All notable changes to this project are documented here. The format follows
   roles (admin invites, member cannot, viewer read-only), the last-owner guard
   and token invites; e2e for inviting, accepting, managing members and
   switching workspaces.
+- App shell & design system baseline (F08): every workspace page renders in
+  a shell with a collapsible sidebar (icons only with Ctrl/Cmd+B, a drawer
+  below 768px), a top bar with URL-derived breadcrumbs and a light/dark/system
+  theme toggle, a skip link and the account menu. The sidebar is driven by the
+  feature registry `src/features/registry.ts` (`{ id, label, icon, href(ws),
+minRole? }`), so later milestones add entries by config. Routes
+  `/w/[workspace]/{home,projects,catalog,docs,settings}` each render an empty
+  state; `/w/[workspace]` redirects to `home`, and unknown paths inside a
+  workspace get a 404 inside the shell. Shared components: `EmptyState`,
+  `PageHeader`, `Page`, `DataTable` (TanStack Table v9, sortable, accessible
+  headers), toasts (sonner; used for member and invite changes),
+  `ConfirmDialog`, `PageSkeleton`, root `error.tsx`, `global-error.tsx` and
+  `not-found.tsx`. Playwright + axe (`@axe-core/playwright`) checks every
+  shell route in light and dark mode for serious or critical WCAG 2.1 AA
+  violations, plus keyboard and tablet-width checks.
 
 ### Fixed
 
