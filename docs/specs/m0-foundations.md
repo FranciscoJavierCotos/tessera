@@ -26,17 +26,17 @@ F02 and F03 can run in parallel after F01.
 - `.nvmrc` = `22`; `package.json` `"engines": { "node": ">=22 <23" }`, `"packageManager": "pnpm@<version>"`.
 - Scripts (the contract every later story relies on):
 
-| Script | Command |
-|---|---|
-| `dev` | `next dev` |
-| `build` | `next build` |
-| `lint` | `eslint .` |
-| `typecheck` | `tsc --noEmit` |
-| `format` / `format:check` | `prettier --write .` / `prettier --check .` |
-| `test` | `vitest run` (unit only; `tests/db` excluded) |
-| `test:db` | `vitest run --project db` (added in F04) |
-| `test:e2e` | `playwright test` |
-| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03 |
+| Script                                           | Command                                       |
+| ------------------------------------------------ | --------------------------------------------- |
+| `dev`                                            | `next dev`                                    |
+| `build`                                          | `next build`                                  |
+| `lint`                                           | `eslint .`                                    |
+| `typecheck`                                      | `tsc --noEmit`                                |
+| `format` / `format:check`                        | `prettier --write .` / `prettier --check .`   |
+| `test`                                           | `vitest run` (unit only; `tests/db` excluded) |
+| `test:db`                                        | `vitest run --project db` (added in F04)      |
+| `test:e2e`                                       | `playwright test`                             |
+| `db:start` / `db:stop` / `db:reset` / `db:types` | added in F03                                  |
 
 - `src/env.ts`: Zod schemas split into `server` and `client` (`NEXT_PUBLIC_*`);
   throws a readable error listing missing variables. Initial variables:
@@ -72,13 +72,13 @@ create type visibility     as enum ('private','project','workspace');
 
 ### Tables
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `profiles` | `id uuid pk → auth.users on delete cascade`, `handle citext unique`, `display_name`, `discipline`, `bio`, `skills text[]`, `avatar_path`, `links jsonb`, `onboarded_at timestamptz` | `handle` check `^[a-z0-9_]{3,30}$`; row created by trigger on `auth.users` insert with `handle = null` until onboarding |
-| `workspaces` | `id`, `slug citext unique`, `name`, `created_by`, `created_at` | slug check `^[a-z0-9-]{3,40}$` |
-| `workspace_members` | pk `(workspace_id, user_id)`, `role workspace_role`, `joined_at` | index on `user_id` |
-| `invites` | `id`, `workspace_id`, `email citext`, `role`, `token_hash text unique`, `invited_by`, `expires_at`, `accepted_at` | raw token never stored; default expiry `now() + 7 days` |
-| `entities` | `id`, `workspace_id`, `type`, `title`, `visibility`, `project_id uuid null → entities`, `owner_id → profiles`, `created_at`, `updated_at` | check: `visibility = 'project'` ⇒ `project_id is not null`; index `(workspace_id, type)` |
+| Table               | Key columns                                                                                                                                                                         | Notes                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `profiles`          | `id uuid pk → auth.users on delete cascade`, `handle citext unique`, `display_name`, `discipline`, `bio`, `skills text[]`, `avatar_path`, `links jsonb`, `onboarded_at timestamptz` | `handle` check `^[a-z0-9_]{3,30}$`; row created by trigger on `auth.users` insert with `handle = null` until onboarding |
+| `workspaces`        | `id`, `slug citext unique`, `name`, `created_by`, `created_at`                                                                                                                      | slug check `^[a-z0-9-]{3,40}$`                                                                                          |
+| `workspace_members` | pk `(workspace_id, user_id)`, `role workspace_role`, `joined_at`                                                                                                                    | index on `user_id`                                                                                                      |
+| `invites`           | `id`, `workspace_id`, `email citext`, `role`, `token_hash text unique`, `invited_by`, `expires_at`, `accepted_at`                                                                   | raw token never stored; default expiry `now() + 7 days`                                                                 |
+| `entities`          | `id`, `workspace_id`, `type`, `title`, `visibility`, `project_id uuid null → entities`, `owner_id → profiles`, `created_at`, `updated_at`                                           | check: `visibility = 'project'` ⇒ `project_id is not null`; index `(workspace_id, type)`                                |
 
 `search tsv` on `entities` is deferred to C09.
 
@@ -91,24 +91,24 @@ see [architecture §4](architecture.md#rls-helper-functions). Until C01 adds
 
 ### Policies (default-deny: RLS on every table)
 
-| Table | select | insert | update | delete |
-|---|---|---|---|---|
-| `profiles` | self, or shares ≥ 1 workspace | trigger only | self | — |
-| `workspaces` | members | any authenticated user (creator becomes owner via trigger/RPC) | owner/admin | owner |
-| `workspace_members` | members of the same workspace | owner/admin (or invite acceptance RPC) | owner/admin | owner/admin, or self (leave) |
-| `invites` | owner/admin of the workspace | owner/admin | owner/admin (revoke) | owner/admin |
-| `entities` | `can_read_entity(id)` | role ≥ member in `workspace_id`, `owner_id = auth.uid()` | `can_write_entity(id)` | owner or admin |
+| Table               | select                        | insert                                                         | update                 | delete                       |
+| ------------------- | ----------------------------- | -------------------------------------------------------------- | ---------------------- | ---------------------------- |
+| `profiles`          | self, or shares ≥ 1 workspace | trigger only                                                   | self                   | —                            |
+| `workspaces`        | members                       | any authenticated user (creator becomes owner via trigger/RPC) | owner/admin            | owner                        |
+| `workspace_members` | members of the same workspace | owner/admin (or invite acceptance RPC)                         | owner/admin            | owner/admin, or self (leave) |
+| `invites`           | owner/admin of the workspace  | owner/admin                                                    | owner/admin (revoke)   | owner/admin                  |
+| `entities`          | `can_read_entity(id)`         | role ≥ member in `workspace_id`, `owner_id = auth.uid()`       | `can_write_entity(id)` | owner or admin               |
 
 Workspace creation goes through RPC `create_workspace(name, slug)` (security
 definer) that inserts the workspace and the owner membership atomically.
 
 ### Seed (`supabase/seed.sql`)
 
-| User | Email | Workspace | Role |
-|---|---|---|---|
-| Alice (A) | `alice@tessera.test` | `acme` | owner |
-| Val (V) | `val@tessera.test` | `acme` | viewer |
-| Bob (B) | `bob@tessera.test` | `globex` | owner |
+| User      | Email                | Workspace | Role   |
+| --------- | -------------------- | --------- | ------ |
+| Alice (A) | `alice@tessera.test` | `acme`    | owner  |
+| Val (V)   | `val@tessera.test`   | `acme`    | viewer |
+| Bob (B)   | `bob@tessera.test`   | `globex`  | owner  |
 
 Plus: one `workspace` entity and one `private` entity (owner Alice) in `acme`.
 Password for all seed users: `password123` (local only).
