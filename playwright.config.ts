@@ -1,4 +1,10 @@
+import { existsSync } from "node:fs";
+
 import { defineConfig, devices } from "@playwright/test";
+
+// Auth e2e creates users through the Supabase Admin API (cloud project): load
+// `.env.local` locally. Variables already set (CI secrets) win.
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const port = 3000;
 const baseURL = `http://localhost:${port}`;

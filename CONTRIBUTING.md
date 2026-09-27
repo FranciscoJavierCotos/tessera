@@ -42,7 +42,7 @@ pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm build
 
 Also run `pnpm test:e2e` when you change a primary user flow, and `pnpm test:db`
 (RLS tests against the Supabase Cloud project; needs `.env.local` with the
-secret key) when you change the schema or policies. The `db` CI check runs
-them on every PR. See the
+secret key) when you change the schema or policies. The `db` and `e2e` CI
+checks run them on every PR. See the
 [architecture spec](docs/specs/architecture.md) for conventions and the
 definition of done (tests, RLS tests for new tables, docs, and CHANGELOG).
