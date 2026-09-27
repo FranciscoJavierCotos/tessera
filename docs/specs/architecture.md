@@ -22,13 +22,13 @@ Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architec
 | Language                         | TypeScript, `strict: true`, end to end                                               |
 | Web                              | Next.js 16 (App Router, RSC, Server Actions)                                         |
 | Data / Auth / Realtime / Storage | Supabase (Postgres 15+), `@supabase/ssr`                                             |
-| Migrations                       | Supabase CLI, `supabase/migrations/*.sql`, local stack via Docker                    |
+| Migrations                       | Supabase CLI, `supabase/migrations/*.sql`, applied to the cloud project (no Docker)  |
 | DB types                         | `supabase gen types typescript` → `src/lib/db/types.ts` (committed)                  |
 | Validation                       | Zod (forms, server actions, env, public API)                                         |
 | UI                               | Tailwind CSS v4, shadcn/ui (Radix), lucide-react                                     |
 | Graphs & canvases                | React Flow (`@xyflow/react`) + elkjs                                                 |
 | Rich text                        | Tiptap                                                                               |
-| Tests                            | Vitest (unit), Vitest + local Supabase (DB/RLS), Playwright + axe (e2e/a11y)         |
+| Tests                            | Vitest (unit), Vitest + Supabase Cloud (DB/RLS), Playwright + axe (e2e/a11y)         |
 | CI                               | GitHub Actions                                                                       |
 | Hosting                          | Vercel + Supabase Cloud (project `tessera`, ref `ijhtgvmcyrzmkmfiavnu`, `eu-west-3`) |
 | Package manager                  | pnpm; Node 24 LTS (`.nvmrc`)                                                         |
@@ -116,6 +116,15 @@ per statement.
 - **Migrations** are forward-only, numbered `NNNN_description.sql` by the CLI
   timestamp; every table gets `alter table … enable row level security` in the
   same migration that creates it.
+- **One database, in the cloud.** Dev, tests and CI all use the Supabase Cloud
+  project `tessera` (ref `ijhtgvmcyrzmkmfiavnu`); there is no local Supabase
+  stack and no Docker. A migration is written as a file first
+  (`pnpm supabase migration new <name>`), then applied with `pnpm db:push` or
+  the Supabase MCP `apply_migration` (then rename the file to the version the
+  cloud recorded, so both match). Because deployed code and open PRs share the
+  same database, migrations must be backward compatible (expand → migrate →
+  contract); destructive changes need an explicit plan in the PR. Tests create
+  their own fixtures and clean them up; they never rely on seed data.
 - **Timestamps** are `timestamptz`, stored in UTC; display in the workspace
   timezone. CI runs with `TZ=UTC`.
 - **IDs** are `uuid default gen_random_uuid()`.

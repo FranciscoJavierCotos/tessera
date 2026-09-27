@@ -37,15 +37,41 @@ Playwright · GitHub Actions · Vercel.
 
 ## Local setup
 
-Prerequisites: **Node 24 LTS** (see `.nvmrc`), **pnpm** (version pinned in
-`package.json` → `packageManager`), and Docker Desktop (for the local Supabase
-stack, arriving with [F03](https://github.com/FranciscoJavierCotos/tessera/issues/3)).
+Prerequisites: **Node 24 LTS** (see `.nvmrc`) and **pnpm** (version pinned in
+`package.json` → `packageManager`). No Docker: the app, tests and CI all use
+the Supabase Cloud project `tessera` directly. The Supabase CLI is a dev
+dependency; no global install is needed.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # then fill in the values
+cp .env.example .env.local   # then fill in the keys (Supabase dashboard → API Keys)
 pnpm dev                     # http://localhost:3000
 ```
+
+### Database
+
+The schema lives in `supabase/migrations` (forward-only). To change it:
+
+1. One-time: `pnpm supabase login` and `pnpm db:link` (asks for the DB password).
+2. `pnpm supabase migration new <name>` and write the SQL.
+3. `pnpm db:push` applies it to the cloud project (or use the Supabase MCP
+   `apply_migration`, then rename the file to the version the cloud recorded).
+4. `pnpm db:types` regenerates `src/lib/db/types.ts`; commit it with the
+   migration. `pnpm db:lint` and the dashboard's Security Advisor must be clean.
+
+Migrations must be backward compatible, because the deployed app and open PRs
+share the same database. Row level security is enabled on every table; see the
+[architecture spec](docs/specs/architecture.md#4-core-data-model).
+
+`pnpm db:seed` loads `supabase/seed.sql` (idempotent) for manual testing:
+
+| User                 | Workspace | Role   |
+| -------------------- | --------- | ------ |
+| `alice@tessera.test` | `acme`    | owner  |
+| `val@tessera.test`   | `acme`    | viewer |
+| `bob@tessera.test`   | `globex`  | owner  |
+
+Password for every seed user: `password123`. Never seed a production project.
 
 The app validates its environment at startup (`src/env.ts`) and exits with a
 list of missing or invalid variables.
@@ -61,6 +87,11 @@ list of missing or invalid variables.
 | `pnpm format` / `format:check` | Prettier write / check                               |
 | `pnpm test`                    | Unit tests (Vitest)                                  |
 | `pnpm test:e2e`                | End-to-end tests (Playwright; starts the dev server) |
+| `pnpm db:link`                 | Link the Supabase CLI to the cloud project (once)    |
+| `pnpm db:push`                 | Apply pending migrations to the cloud project        |
+| `pnpm db:types`                | Regenerate `src/lib/db/types.ts` from the cloud DB   |
+| `pnpm db:lint`                 | Lint the cloud DB schema (`supabase db lint`)        |
+| `pnpm db:seed`                 | Load `supabase/seed.sql` into the cloud project      |
 
 First e2e run: `pnpm exec playwright install chromium`.
 

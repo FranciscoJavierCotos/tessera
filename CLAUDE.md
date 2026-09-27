@@ -43,6 +43,10 @@ open source later.
   in the same migration + policies + RLS tests (cross-workspace denial, role checks).
 - Schema changes only through `supabase/migrations` (Supabase CLI). Never edit the
   cloud DB by hand. Regenerate `src/lib/db/types.ts` after each migration.
+- **No local Supabase stack and no Docker.** Dev, tests and CI use the cloud
+  project directly: `pnpm db:push` (or Supabase MCP `apply_migration`, then
+  match the file's version), `pnpm db:types`, `pnpm db:lint`. Migrations must be
+  backward compatible; tests create and clean up their own fixtures.
 - Security-definer functions: `set search_path = ''`, fully-qualified names,
   live in schema `private`.
 - The service-role client is server-only and always scoped by `workspace_id`.
@@ -53,5 +57,6 @@ open source later.
 ## Definition of done
 
 Unit tests for logic, RLS tests for new tables, e2e for new primary flows,
-migration + types committed and `pnpm db:reset` works, docs/CHANGELOG updated,
+migration committed and applied to the cloud project (versions match) + types
+regenerated, docs/CHANGELOG updated,
 CI green.

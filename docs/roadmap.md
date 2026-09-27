@@ -72,7 +72,7 @@ project to workspace visibility.
 | Web framework                  | **Next.js 16** (App Router, React Server Components, Server Actions)                                                      | SSR + API routes in one deployable; mainstream                                                                                                                                          |
 | DB / Auth / Realtime / Storage | **Supabase** (PostgreSQL 15+)                                                                                             | Postgres for the graph (recursive CTEs), Auth, Realtime for presence/notifications, `pg_cron` for SLA checks, `pgvector` later for AI. Fully OSS, so it self-hosts                      |
 | Authorization                  | **Postgres RLS** as the primary gate                                                                                      | Unlike the table-tennis app (functions are the gate), here the browser talks to Supabase with the user's JWT and RLS enforces tenancy. This is a different pattern to learn and to show |
-| Migrations                     | Supabase CLI (`supabase/migrations`, local stack via Docker)                                                              | Versioned and replayable, unlike hand-run SQL                                                                                                                                           |
+| Migrations                     | Supabase CLI (`supabase/migrations`), applied to the Supabase Cloud project (no local stack, no Docker)                   | Versioned and replayable, unlike hand-run SQL                                                                                                                                           |
 | DB types                       | `supabase gen types` → `src/lib/db/types.ts`                                                                              | Compile-time safety on queries                                                                                                                                                          |
 | Validation                     | **Zod**                                                                                                                   | Shared schemas for forms, server actions, and the public API                                                                                                                            |
 | UI                             | **Tailwind CSS v4 + shadcn/ui** (Radix) + lucide icons                                                                    | Accessible primitives you own the code for                                                                                                                                              |
@@ -80,7 +80,7 @@ project to workspace visibility.
 | Rich text                      | **Tiptap** (ProseMirror)                                                                                                  | Mentions, slash commands, code blocks; Yjs collaboration later                                                                                                                          |
 | Data fetching (client)         | TanStack Query (only where client state is needed)                                                                        | Server Components cover most reads                                                                                                                                                      |
 | Charts                         | Recharts (following the `dataviz` skill palette)                                                                          | Quality and pipeline health dashboards                                                                                                                                                  |
-| Tests                          | **Vitest** (unit), **Vitest + local Supabase** (RLS/DB tests), **Playwright** (e2e + axe a11y)                            | RLS needs real Postgres tests, not mocks                                                                                                                                                |
+| Tests                          | **Vitest** (unit), **Vitest + Supabase Cloud project** (RLS/DB tests), **Playwright** (e2e + axe a11y)                    | RLS needs real Postgres tests, not mocks                                                                                                                                                |
 | CI                             | **GitHub Actions**                                                                                                        | lint → typecheck → unit → db tests → build → e2e                                                                                                                                        |
 | Hosting                        | **Vercel** (app) + **Supabase Cloud** free tier; `docker compose` for self-host (M5)                                      | Free for a portfolio; self-host for OSS                                                                                                                                                 |
 | Email                          | Resend (M2)                                                                                                               | Invites and digests                                                                                                                                                                     |
@@ -206,29 +206,29 @@ teammate, and see an empty but navigable shell. CI green; RLS tested._
 - [ ] Conventional Commits documented in `CONTRIBUTING.md` (lightweight version).
       **Acceptance:** a PR with a failing test is blocked; a green PR can merge.
 
-#### F03 — Supabase local stack, migrations & core schema
+#### F03 — Supabase project, migrations & core schema
 
 **Depends on:** F01
 **Goal:** a versioned database with the entity core and default-deny RLS.
 
-- [ ] `supabase init`; `pnpm db:start|db:reset|db:types` scripts; document Docker as a prerequisite.
+- [ ] `supabase init` + link to the cloud project; `pnpm db:push|db:types|db:lint|db:seed` scripts. **No local stack and no Docker:** every environment (dev, tests, CI) uses the Supabase Cloud project.
 - [ ] Migration `0001_core`: `profiles`, `workspaces`, `workspace_members`, `invites`, `entities` (+ enums for roles, discipline, entity type, visibility).
 - [ ] Trigger: create a `profiles` row on `auth.users` insert.
 - [ ] `security definer` helpers: `is_workspace_member`, `workspace_role`, `can_read_entity`, `can_write_entity` (with `search_path` pinned).
 - [ ] RLS **enabled on every table**; policies for the tables above.
 - [ ] Generated types committed to `src/lib/db/types.ts`; typed server and browser Supabase clients (`@supabase/ssr`).
-- [ ] `supabase/seed.sql` with two users and one workspace for local dev.
-      **Acceptance:** `pnpm db:reset` recreates the DB from scratch; types compile; `get_advisors` security lint (or `supabase db lint`) is clean.
+- [ ] `supabase/seed.sql` (idempotent) with the dev users and workspaces, loaded into the cloud project on demand.
+      **Acceptance:** the migration applies cleanly to the cloud project and its version matches the file in `supabase/migrations`; types generated from the cloud project compile; `get_advisors` security lint is clean.
 
 #### F04 — RLS test harness + DB job in CI
 
 **Depends on:** F02, F03
 **Goal:** authorization is tested against real Postgres, not assumed.
 
-- [ ] `tests/db/` Vitest suite that signs in as seeded users (A in workspace 1, B in workspace 2, viewer V).
+- [ ] `tests/db/` Vitest suite against the Supabase Cloud project. Fixtures (users A in workspace 1, B in workspace 2, viewer V) are created per run through the Admin API with unique emails and deleted afterwards.
 - [ ] Helpers: `asUser(user)` returns an authenticated client; `expectDenied(query)`.
 - [ ] Cases: cross-workspace read denied; viewer cannot write; private entity hidden from other members.
-- [ ] CI job: `supabase start` → `db reset` → db tests (separate job, cached Docker images).
+- [ ] CI job: runs the db tests against the cloud project (URL and keys from GitHub secrets; no Docker), plus the security advisor / `supabase db lint --linked`.
       **Acceptance:** removing any policy makes at least one test fail (spot-check two policies).
 
 #### F05 — Authentication
@@ -840,7 +840,7 @@ Title format: `<ID> — <title>`, e.g. `C05 — Mentions & backlinks`.
 
 - Unit tests for logic; **RLS tests for every new table** (cross-workspace denial + role checks).
 - An e2e test for any new primary user flow.
-- Migration + regenerated DB types committed; `pnpm db:reset` works from zero.
+- Migration committed and applied to the Supabase Cloud project (versions match); DB types regenerated from it.
 - UI: empty, loading, and error states; keyboard accessible; dark mode.
 - Docs updated (README / CLAUDE.md / API docs as relevant); CHANGELOG entry.
 - CI green; PR linked to the issue with `Closes #<n>`.

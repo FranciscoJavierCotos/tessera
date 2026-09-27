@@ -16,3 +16,12 @@ All notable changes to this project are documented here. The format follows
   typecheck, format check, unit tests, and build on every PR and push to
   `main`; branch protection on `main`; `CONTRIBUTING.md` with the branch,
   commit, and PR conventions.
+- Supabase core schema (F03), cloud-only (no local stack, no Docker): Supabase
+  CLI as a dev dependency with `db:link|push|types|lint|seed` scripts targeting
+  the `tessera` cloud project; migration `core` with enums,
+  `profiles`, `workspaces`, `workspace_members`, `invites` and `entities`;
+  default-deny RLS on every table with policies backed by `security definer`
+  helpers in schema `private`; `auth.users` → `profiles` trigger; workspace
+  creator becomes owner (trigger + `create_workspace` RPC); idempotent dev seed
+  with three users and two workspaces; generated DB types and typed server/browser
+  Supabase clients (`@supabase/ssr`).
