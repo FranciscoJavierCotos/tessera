@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AppHeader } from "@/components/app/app-header";
+import { RememberWorkspace } from "@/components/app/remember-workspace";
 import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { requireUser } from "@/lib/profile/server";
 import { getMyWorkspace, listMyWorkspaces } from "@/lib/workspace/server";
@@ -30,6 +31,7 @@ export default async function WorkspaceLayout({
 
   return (
     <div className="flex flex-1 flex-col">
+      <RememberWorkspace slug={workspace.slug} />
       <AppHeader
         handle={profile?.handle}
         switcher={

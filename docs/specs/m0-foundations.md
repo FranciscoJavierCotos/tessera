@@ -228,13 +228,13 @@ abandoned uploads).
 
 ### Routes
 
-| Route                             | Purpose                                                                                                                                                                                    |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/w`                              | Workspaces list + pending invites; redirects to the last used workspace (cookie `tessera-last-workspace`, set by `src/proxy.ts` on `/w/<slug>/…` visits, prefetches ignored) unless `?all` |
-| `/w/new`                          | Create a workspace (`create_workspace`), then open it                                                                                                                                      |
-| `/w/[workspace]`                  | Workspace home (placeholder until F08); the layout 404s for non-members and renders the switcher                                                                                           |
-| `/w/[workspace]/settings/members` | Everyone sees the list; owners/admins invite, change roles, remove, revoke invites; anyone can leave                                                                                       |
-| `/invite/[token]`                 | Preview and accept an invite (protected route; onboarding runs first for new users)                                                                                                        |
+| Route                             | Purpose                                                                                                                                                                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/w`                              | Workspaces list + pending invites; redirects to the last used workspace (cookie `tessera-last-workspace`, written client-side by the workspace layout on real visits; the proxy cannot tell prefetches apart) unless `?all` |
+| `/w/new`                          | Create a workspace (`create_workspace`), then open it                                                                                                                                                                       |
+| `/w/[workspace]`                  | Workspace home (placeholder until F08); the layout 404s for non-members and renders the switcher                                                                                                                            |
+| `/w/[workspace]/settings/members` | Everyone sees the list; owners/admins invite, change roles, remove, revoke invites; anyone can leave                                                                                                                        |
+| `/invite/[token]`                 | Preview and accept an invite (protected route; onboarding runs first for new users)                                                                                                                                         |
 
 The invite link is shown once to the inviter after creation (only the hash is
 stored), so invites work while the mailer only logs to the console.

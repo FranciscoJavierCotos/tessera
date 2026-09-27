@@ -1,26 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { workspaceSlugFromPath } from "./last-used";
+import { lastWorkspaceCookie } from "./last-used";
 
-describe("workspaceSlugFromPath", () => {
-  it.each([
-    ["/w/acme", "acme"],
-    ["/w/acme/", "acme"],
-    ["/w/acme/settings/members", "acme"],
-    ["/w/Acme-Data", "acme-data"],
-  ])("%s → %s", (path, slug) => {
-    expect(workspaceSlugFromPath(path)).toBe(slug);
+describe("lastWorkspaceCookie", () => {
+  it("stores the slug site-wide for a year", () => {
+    expect(lastWorkspaceCookie("acme-data", false)).toBe(
+      "tessera-last-workspace=acme-data; path=/; max-age=31536000; samesite=lax",
+    );
   });
 
-  it.each([
-    "/w",
-    "/w/",
-    "/w/new",
-    "/w/ab",
-    "/w/acme_data",
-    "/u/acme",
-    "/wx/acme",
-  ])("ignores %s", (path) => {
-    expect(workspaceSlugFromPath(path)).toBeNull();
+  it("is secure on https", () => {
+    expect(lastWorkspaceCookie("acme", true)).toMatch(/; secure$/);
   });
 });

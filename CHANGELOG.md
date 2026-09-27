@@ -56,8 +56,8 @@ All notable changes to this project are documented here. The format follows
   RLS tests for handles, onboarding, invites and avatars; e2e for onboarding
   and profile editing.
 - Workspaces, membership & invites (F07): `/w` lists the user's workspaces
-  (and pending invites) and redirects to the last used one (cookie set by
-  `src/proxy.ts`; `?all` shows the list); `/w/new` creates a workspace;
+  (and pending invites) and redirects to the last used one (cookie written
+  by the workspace layout on visits; `?all` shows the list); `/w/new` creates a workspace;
   `/w/[workspace]` home with a workspace switcher in the header; members page
   `/w/[workspace]/settings/members` to invite by email, change roles, remove
   members, leave, and revoke pending invites. Invites use a 32-byte random

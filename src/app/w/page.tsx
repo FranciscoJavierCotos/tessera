@@ -29,7 +29,7 @@ export default async function WorkspacesPage({
     cookies(),
   ]);
 
-  const last = cookieStore.get(LAST_WORKSPACE_COOKIE)?.value;
+  const last = cookieStore.get(LAST_WORKSPACE_COOKIE)?.value?.toLowerCase();
   if (!showAll && last && workspaces.some((w) => w.slug === last)) {
     redirect(`/w/${last}`);
   }

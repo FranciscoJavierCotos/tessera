@@ -145,6 +145,17 @@ test.describe("workspaces", () => {
       .click();
     await page.getByRole("menuitem", { name: /Alpha Team/ }).click();
     await expect(page).toHaveURL(`/w/${first}`);
+    await expect(
+      page.getByRole("heading", { name: "Alpha Team", level: 1 }),
+    ).toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (await page.context().cookies()).find(
+            (c) => c.name === "tessera-last-workspace",
+          )?.value,
+      )
+      .toBe(first);
 
     // `/w` returns to the last used workspace; `?all` lists them.
     await page.goto("/w");

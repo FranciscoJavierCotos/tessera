@@ -1,25 +1,19 @@
-import { RESERVED_SLUGS, SLUG_PATTERN } from "@/lib/profile/schema";
-
 /** Remembers the last workspace a user opened; `/w` redirects to it. */
 export const LAST_WORKSPACE_COOKIE = "tessera-last-workspace";
 
-export const LAST_WORKSPACE_COOKIE_OPTIONS = {
-  path: "/",
-  httpOnly: true,
-  sameSite: "lax",
-  maxAge: 60 * 60 * 24 * 365,
-} as const;
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 /**
- * The workspace slug in `/w/<slug>` or `/w/<slug>/…`, or `null`. Membership
- * is not checked here: `/w` only follows the cookie to a workspace the user
- * still belongs to.
+ * The `document.cookie` assignment that remembers `slug`. Not sensitive (a
+ * slug the user can open anyway): `/w` only follows it to a workspace the
+ * user still belongs to.
  */
-export function workspaceSlugFromPath(pathname: string): string | null {
-  const match = /^\/w\/([^/]+)(?:\/|$)/.exec(pathname);
-  const slug = match?.[1]?.toLowerCase();
-  if (!slug || !SLUG_PATTERN.test(slug) || RESERVED_SLUGS.includes(slug)) {
-    return null;
-  }
-  return slug;
+export function lastWorkspaceCookie(slug: string, secure: boolean): string {
+  return [
+    `${LAST_WORKSPACE_COOKIE}=${encodeURIComponent(slug)}`,
+    "path=/",
+    `max-age=${ONE_YEAR_SECONDS}`,
+    "samesite=lax",
+    ...(secure ? ["secure"] : []),
+  ].join("; ");
 }
