@@ -49,7 +49,6 @@ export default function LandingPage() {
       <header className="border-b">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-6">
           <span className="font-semibold tracking-tight">Tessera</span>
-          {/* /sign-in arrives with F05. */}
           <Button asChild variant="outline" size="sm">
             <Link href="/sign-in">Sign in</Link>
           </Button>

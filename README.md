@@ -93,7 +93,25 @@ list of missing or invalid variables.
 | `pnpm db:lint`                 | Lint the cloud DB schema (`supabase db lint`)        |
 | `pnpm db:seed`                 | Load `supabase/seed.sql` into the cloud project      |
 
-First e2e run: `pnpm exec playwright install chromium`.
+First e2e run: `pnpm exec playwright install chromium`. The auth e2e tests
+create and delete their own users through the Admin API, so they need
+`.env.local` with the secret key.
+
+### Authentication
+
+Sign-in uses Supabase Auth: email magic link and GitHub OAuth. One-time setup
+in the Supabase dashboard (Authentication):
+
+- **URL Configuration**: Site URL = the deployed app URL; add
+  `http://localhost:3000/auth/callback` (and the deployed
+  `…/auth/callback`) to the redirect URLs.
+- **Sign In / Providers → GitHub**: client ID and secret from a GitHub OAuth
+  app whose callback URL is
+  `https://ijhtgvmcyrzmkmfiavnu.supabase.co/auth/v1/callback`.
+
+`src/proxy.ts` refreshes the session on every request and sends signed-out
+visitors of `/w/*`, `/u/*` and `/onboarding` to `/sign-in?next=<path>`. It is a
+UX gate only; RLS remains the authorization boundary.
 
 ## License
 
