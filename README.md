@@ -10,7 +10,9 @@ people's heads. Tessera joins them: catalog, lineage, data-quality tests,
 pipelines, incidents, data models, architecture decisions, and docs, all linked
 through `@mentions` and backlinks.
 
-**Status:** 🚧 pre-alpha. Working on **M0 — Foundations**. See the
+**Status:** 🚧 pre-alpha. **M0 — Foundations** is done: sign in, create a
+workspace, invite teammates and navigate an empty shell at
+<https://tessera-data.vercel.app>. Next up: **M1 — Collaboration MVP**. See the
 [roadmap](docs/roadmap.md) and [milestones](https://github.com/FranciscoJavierCotos/tessera/milestones).
 
 ## Highlights (planned)

@@ -1,6 +1,6 @@
 # M0 — Foundations (walking skeleton) · Spec
 
-Status: ready · Milestone: `M0 Foundations` · Stories: F01–F08
+Status: ✅ done (2026-09-29) · Milestone: `M0 Foundations` · Stories: F01–F08
 Source: [roadmap §4 M0](../roadmap.md) ·
 Architecture: [architecture.md](architecture.md)
 
@@ -142,6 +142,9 @@ Password for all seed users: `password123`. The seed is idempotent and loaded
 into the cloud project only on demand (`pnpm db:seed`); it is for manual
 testing of the dev project and must never be loaded into a production project.
 Automated tests do not depend on it.
+
+The seed is **not** loaded in the cloud project today; see
+[dev data](#m0-delivered) for the accounts that are.
 
 ## F04 — RLS test harness + DB job in CI
 
@@ -287,7 +290,74 @@ copy in the UI (last owner → "make someone else an owner first").
 
 ## M0 exit checklist
 
-- [ ] All F01–F08 issues closed via PRs; `ci` and `db` checks required on `main`.
-- [ ] Production deploy on Vercel wired to Supabase Cloud project `tessera`.
-- [ ] Migrations applied to the cloud project through the CLI (`supabase db push`), not by hand.
-- [ ] `get_advisors` (security) clean on the cloud project.
+- [x] All F01–F08 issues closed via PRs (#9–#16); ruleset `Protect main`
+      requires the `ci` and `db` checks.
+- [x] Production deploy on Vercel (<https://tessera-data.vercel.app>) wired to
+      Supabase Cloud project `tessera`.
+- [x] Migrations applied to the cloud project; all five versions match
+      `supabase/migrations`.
+- [x] `get_advisors` (security) has no schema findings. One Auth setting warning
+      remains (leaked-password protection off); see follow-ups below.
+
+## M0 delivered
+
+Snapshot of what M0 actually shipped (2026-09-29), including where it differs
+from the plan above.
+
+### Changes from the plan
+
+- **Password sign-in instead of magic links** (#17 / #18). The built-in
+  Supabase mailer allows about two emails per hour, so links rarely arrived.
+  `/sign-in` now has email + password, a "Create an account" mode and GitHub
+  OAuth. The sign-in Server Action runs the onboarding guard itself, because
+  the proxy does not run for a Server Action's redirect target.
+- **Invites are link-based.** `ConsoleMailer` only logs; the inviter sees the
+  invite link once and shares it by hand. `ResendMailer` is M2 work.
+- **`e2e` is a CI job but not a required check.** The ruleset requires `ci` and
+  `db`; `e2e` (Playwright + axe against the cloud project) runs on every PR.
+
+### Repository & CI
+
+| Item          | State                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stack         | Next.js 16.3, React 19.2, TypeScript strict, Node 24, pnpm 11, Tailwind v4 + shadcn/ui, Zod 4, Vitest 5, Playwright 1.63, `@supabase/ssr` 0.12           |
+| CI (`ci.yml`) | `ci`: lint → typecheck → format → unit → build · `db`: `test:db` + `db:lint` (serialized) · `e2e`: build + Playwright; all with `TZ=UTC`                 |
+| `main` rules  | Ruleset `Protect main`: PR required, squash only, linear history, no force push or deletion, required checks `ci` + `db` (strict); branches auto-deleted |
+| Secrets       | `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`                                                 |
+| Tests         | 160 unit (Vitest), 62 RLS/DB cases in `tests/db`, 27 e2e (Playwright + axe)                                                                              |
+
+### Database (cloud project `tessera`)
+
+| Version          | Migration                       | Story |
+| ---------------- | ------------------------------- | ----- |
+| `20260927130326` | `core`                          | F03   |
+| `20260927132810` | `entities_rls_row_checks`       | F03   |
+| `20260927143316` | `onboarding_profiles`           | F06   |
+| `20260927144218` | `invite_email_case_insensitive` | F06   |
+| `20260927145339` | `workspaces_membership_invites` | F07   |
+
+Tables: `profiles`, `workspaces`, `workspace_members`, `invites`, `entities`
+(RLS on all), plus the private `avatars` Storage bucket.
+
+### Dev data
+
+The cloud project holds one demo workspace, `acme-data` ("Acme Data"), with a
+real account for every role: `javier_owner` (owner), `ada_admin` (admin),
+`max_member` (member), `vera_viewer` (viewer). They sign in with email +
+password. The passwords are shared out of band and never committed. Test
+fixtures (`e2e+…@tessera.test`) are created and deleted per run.
+
+### Known gaps carried into M1
+
+- **GitHub OAuth is not enabled** in the Supabase project yet (the button
+  errors): add the GitHub provider's client ID and secret in the dashboard.
+- **Confirm email is on**, so self-service sign-up needs the confirmation
+  email, which is subject to the mailer limit above. Turn it off or configure
+  custom SMTP (Resend, M2).
+- **No password reset.** An admin sets passwords with
+  `auth.admin.updateUserById`.
+- **Leaked-password protection is off** (security advisor warning); enable it
+  in Authentication settings when the plan allows.
+- **Vercel Preview deployments fail**: the Preview environment has no
+  `NEXT_PUBLIC_SUPABASE_*` / `NEXT_PUBLIC_SITE_URL` variables. Production is
+  fine.
