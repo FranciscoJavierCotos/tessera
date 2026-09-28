@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ROLE_LABELS, type WorkspaceRole } from "@/lib/workspace/roles";
 
 import { revokeInvite } from "./actions";
-import { ConfirmButton } from "./confirm-button";
+import { ConfirmButton } from "@/components/confirm-button";
 
 type Invite = {
   id: string;

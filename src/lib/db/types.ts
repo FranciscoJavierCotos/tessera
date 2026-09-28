@@ -165,6 +165,96 @@ export type Database = {
         }
         Relationships: []
       }
+      project_members: {
+        Row: {
+          added_at: string
+          project_id: string
+          role: Database["public"]["Enums"]["project_role"]
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          added_at?: string
+          project_id: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          added_at?: string
+          project_id?: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_fk"
+            columns: ["project_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "project_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_workspace_member_fk"
+            columns: ["workspace_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_members"
+            referencedColumns: ["workspace_id", "user_id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          description: string
+          id: string
+          slug: string
+          status: Database["public"]["Enums"]["project_status"]
+          type: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          description?: string
+          id: string
+          slug: string
+          status?: Database["public"]["Enums"]["project_status"]
+          type?: Database["public"]["Enums"]["entity_type"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["project_status"]
+          type?: Database["public"]["Enums"]["entity_type"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_entity_fk"
+            columns: ["id", "workspace_id", "type"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id", "workspace_id", "type"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           joined_at: string
@@ -240,6 +330,33 @@ export type Database = {
     Functions: {
       accept_invite: { Args: { token: string }; Returns: string }
       accept_pending_invite: { Args: { invite_id: string }; Returns: string }
+      create_project: {
+        Args: {
+          description?: string
+          is_private?: boolean
+          name: string
+          slug: string
+          status?: Database["public"]["Enums"]["project_status"]
+          workspace: string
+        }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          description: string
+          id: string
+          slug: string
+          status: Database["public"]["Enums"]["project_status"]
+          type: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "projects"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_workspace: {
         Args: { name: string; slug: string }
         Returns: {
@@ -283,6 +400,33 @@ export type Database = {
           workspace_slug: string
         }[]
       }
+      update_project: {
+        Args: {
+          description: string
+          is_private: boolean
+          name: string
+          project: string
+          slug: string
+          status: Database["public"]["Enums"]["project_status"]
+        }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          description: string
+          id: string
+          slug: string
+          status: Database["public"]["Enums"]["project_status"]
+          type: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "projects"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       discipline:
@@ -292,6 +436,8 @@ export type Database = {
         | "analytics_engineer"
         | "lead"
       entity_type: "project" | "asset" | "page"
+      project_role: "lead" | "contributor" | "viewer"
+      project_status: "planning" | "active" | "paused" | "done"
       visibility: "private" | "project" | "workspace"
       workspace_role: "owner" | "admin" | "member" | "viewer"
     }
@@ -429,6 +575,8 @@ export const Constants = {
         "lead",
       ],
       entity_type: ["project", "asset", "page"],
+      project_role: ["lead", "contributor", "viewer"],
+      project_status: ["planning", "active", "paused", "done"],
       visibility: ["private", "project", "workspace"],
       workspace_role: ["owner", "admin", "member", "viewer"],
     },
