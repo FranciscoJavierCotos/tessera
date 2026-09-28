@@ -29,7 +29,7 @@ import {
   removeMember,
   type ActionResult,
 } from "./actions";
-import { ConfirmButton } from "./confirm-button";
+import { ConfirmButton } from "@/components/confirm-button";
 
 type Member = {
   userId: string;

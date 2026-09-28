@@ -89,6 +89,10 @@ and the entity row's `type` must match the table (check via trigger or a
 | `project`   | members of `project_id` (plus workspace owners/admins) |
 | `workspace` | every member of the workspace                          |
 
+A **private project** (C01) is a `project` entity with visibility `project`
+scoped to itself (`project_id = id`); a workspace-visible project has
+visibility `workspace` and no `project_id` (check `entities_project_scope`).
+
 | Workspace role | Can                                               |
 | -------------- | ------------------------------------------------- |
 | `owner`        | everything, incl. delete workspace, manage owners |
@@ -97,6 +101,16 @@ and the entity row's `type` must match the table (check via trigger or a
 | `viewer`       | read-only everywhere                              |
 
 Invariant: a workspace always has ≥ 1 owner (DB-enforced, F07).
+
+| Project role  | Can (with workspace role ≥ `member`)                     |
+| ------------- | -------------------------------------------------------- |
+| `lead`        | edit, archive, change visibility, manage project members |
+| `contributor` | edit name, slug, description, status                     |
+| `viewer`      | read-only                                                |
+
+Workspace owners/admins act as leads on every project. A workspace `viewer`
+is read-only whatever their project role. Project members must be members of
+the workspace (composite FK; leaving the workspace removes them).
 
 ### RLS helper functions
 
@@ -107,7 +121,16 @@ in schema `private` (not exposed through PostgREST) with `execute` granted to
 - `private.is_workspace_member(ws uuid) → boolean`
 - `private.workspace_role(ws uuid) → public.workspace_role` (null if not a member)
 - `private.can_read_entity(e uuid) → boolean`
-- `private.can_write_entity(e uuid) → boolean` (readable AND role ≥ `member`)
+- `private.can_write_entity(e uuid) → boolean` (readable AND role ≥ `member`;
+  a project also needs `can_edit_project`)
+- `private.can_read_entity_row(ws, owner, vis, project)` /
+  `private.can_write_entity_row(e, ws, owner, vis, project, type)`: the same
+  rules from the row's own columns, used by the `entities` policies so
+  `insert … returning` works
+- `private.project_role(p uuid) → public.project_role` (null if not a member)
+- `private.can_edit_project(p uuid)` (lead/contributor) and
+  `private.can_manage_project(p uuid)` (lead), both true for workspace
+  owners/admins and false for workspace viewers
 
 Policies call these helpers wrapped in `(select …)` so Postgres caches the result
 per statement.

@@ -86,6 +86,25 @@ minRole? }`), so later milestones add entries by config. Routes
   `not-found.tsx`. Playwright + axe (`@axe-core/playwright`) checks every
   shell route in light and dark mode for serious or critical WCAG 2.1 AA
   violations, plus keyboard and tablet-width checks.
+- Projects (C01, #21): `/w/[workspace]/projects` lists the projects the user
+  can see with a status filter (`?status=planning|active|paused|done|archived`);
+  `/projects/new` creates one (name, URL slug, description, status, visibility
+  `workspace|private`; the creator becomes lead); `/projects/[project]` is the
+  project home (overview, members, empty slots for linked assets, pages and
+  activity) and `/projects/[project]/settings` edits it, archives or restores
+  it. Project members have roles `lead|contributor|viewer`: leads (and
+  workspace owners/admins) add workspace members, change roles, remove people,
+  archive and change visibility; contributors edit; viewers read. Private
+  projects are invisible to workspace members outside them (a 404).
+  Migration `projects`: `projects` extends `entities` through a composite FK
+  that pins the entity type, `project_members` must be workspace members
+  (leaving the workspace cascades), a private project is an entity with
+  visibility `project` scoped to itself, entity read/write helpers now honour
+  project membership and project roles, guard triggers for archive and
+  visibility, and RPCs `create_project` / `update_project` (entity + project
+  row in one transaction). Migration `projects_fk_indexes` covers the new
+  composite FKs. RLS tests (visibility, roles, members, slugs) and e2e for the
+  create → filter → edit → archive flow and the role checks.
 
 ### Changed
 

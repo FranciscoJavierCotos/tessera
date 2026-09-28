@@ -291,15 +291,15 @@ with a demo workspace._
 
 #### C01 — Projects
 
-**Depends on:** F08
+**Depends on:** F08 · **Delivered:** #22
 **Goal:** the collaborative unit of work.
 
-- [ ] Migration: `projects` (extends `entities`), `project_members`.
-- [ ] Create/edit/archive a project: name, slug, description, status (`planning|active|paused|done`), visibility (`workspace|private`).
-- [ ] Project members with roles (`lead|contributor|viewer`).
-- [ ] Project home: overview, members, and slots for linked assets, pages, and feed (filled by later stories).
-- [ ] Projects list with status filter.
-- [ ] RLS tests: a private project is invisible to non-members.
+- [x] Migration: `projects` (extends `entities`), `project_members`.
+- [x] Create/edit/archive a project: name, slug, description, status (`planning|active|paused|done`), visibility (`workspace|private`).
+- [x] Project members with roles (`lead|contributor|viewer`).
+- [x] Project home: overview, members, and slots for linked assets, pages, and feed (filled by later stories).
+- [x] Projects list with status filter.
+- [x] RLS tests: a private project is invisible to non-members.
       **Acceptance:** a contributor can edit; a project viewer cannot; a workspace member outside a private project gets a 404.
 
 #### C02 — Asset catalog core
