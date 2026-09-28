@@ -4,6 +4,11 @@ import { authErrorCopy, authErrorFromParams, toAuthErrorCode } from "./errors";
 
 describe("toAuthErrorCode", () => {
   it.each([
+    ["invalid_credentials", "invalid_credentials"],
+    ["email_not_confirmed", "email_not_confirmed"],
+    ["user_already_exists", "user_exists"],
+    ["email_exists", "user_exists"],
+    ["weak_password", "weak_password"],
     ["otp_expired", "link_expired"],
     ["flow_state_expired", "link_expired"],
     ["access_denied", "oauth_denied"],
@@ -37,6 +42,10 @@ describe("authErrorFromParams", () => {
 describe("authErrorCopy", () => {
   it("has plain-language copy for every case", () => {
     for (const code of [
+      "invalid_credentials",
+      "email_not_confirmed",
+      "user_exists",
+      "weak_password",
       "link_expired",
       "oauth_denied",
       "rate_limited",

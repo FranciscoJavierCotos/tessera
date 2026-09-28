@@ -1,22 +1,25 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import { env } from "@/env";
+import { credentialsInput, type AuthMode } from "@/lib/auth/credentials";
 import { authErrorCopy, toAuthErrorCode } from "@/lib/auth/errors";
-import { safeNextPath } from "@/lib/auth/redirect";
+import { onboardingPath, safeNextPath } from "@/lib/auth/redirect";
+import { isOnboardingPath } from "@/lib/auth/routes";
+import { isOnboarded } from "@/lib/supabase/proxy";
 import { createServerClient } from "@/lib/supabase/server";
 
-export type EmailSignInState =
+export type PasswordSignInState =
   | { status: "idle" }
-  | { status: "sent"; email: string }
-  | { status: "error"; title: string; description: string; email?: string };
-
-const emailSignInInput = z.object({
-  email: z.email({ error: "Enter a valid email address." }).trim(),
-  next: z.string().optional(),
-});
+  | { status: "confirm"; email: string }
+  | {
+      status: "error";
+      title: string;
+      description: string;
+      email?: string;
+      mode: AuthMode;
+    };
 
 function callbackUrl(next: string) {
   const url = new URL("/auth/callback", env.NEXT_PUBLIC_SITE_URL);
@@ -24,38 +27,65 @@ function callbackUrl(next: string) {
   return url.toString();
 }
 
-/** Sends a magic link. New emails get an account on first sign-in. */
-export async function signInWithEmail(
-  _previous: EmailSignInState,
+/**
+ * Signs in with email + password, or creates the account when `mode` is
+ * `sign-up`. On success redirects to the same-origin `next` path (through
+ * onboarding for users who have not finished it). If the
+ * project requires email confirmation, a new account gets `confirm` instead.
+ */
+export async function signInWithPassword(
+  _previous: PasswordSignInState,
   formData: FormData,
-): Promise<EmailSignInState> {
-  const input = emailSignInInput.safeParse({
+): Promise<PasswordSignInState> {
+  const mode: AuthMode =
+    formData.get("mode") === "sign-up" ? "sign-up" : "sign-in";
+  const input = credentialsInput.safeParse({
+    mode,
     email: formData.get("email"),
+    password: formData.get("password"),
     next: formData.get("next") ?? undefined,
   });
   if (!input.success) {
+    const email = formData.get("email");
     return {
       status: "error",
-      title: "Check your email address",
-      description: input.error.issues[0]?.message ?? "Enter a valid email.",
+      mode,
+      email: typeof email === "string" ? email : undefined,
+      title:
+        mode === "sign-up"
+          ? "Check your details"
+          : "Check your email and password",
+      description: input.error.issues[0]?.message ?? "Check the form.",
     };
   }
 
-  const { email } = input.data;
+  const { email, password } = input.data;
+  const next = safeNextPath(input.data.next);
   const supabase = await createServerClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: callbackUrl(safeNextPath(input.data.next)) },
-  });
+
+  const { data, error } =
+    input.data.mode === "sign-up"
+      ? await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: callbackUrl(next) },
+        })
+      : await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return {
       status: "error",
+      mode,
       email,
       ...authErrorCopy(toAuthErrorCode(error.code)),
     };
   }
-  return { status: "sent", email };
+  if (!data.session) return { status: "confirm", email };
+
+  // The proxy does not run for a Server Action's redirect target (it renders
+  // in the same response), so apply its onboarding guard here.
+  const onboarded = await isOnboarded(supabase, data.session.user.id);
+  redirect(onboarded || isOnboardingPath(next) ? next : onboardingPath(next));
 }
 
 /** Starts the GitHub OAuth flow (PKCE) and redirects to GitHub. */

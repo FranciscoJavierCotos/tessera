@@ -8,13 +8,13 @@ test.describe("workspaces", () => {
     admin,
     user: owner,
     createUser,
-    magicLinkPath,
+    signIn,
   }) => {
     const invitee = await createUser({ onboarded: true });
     const slug = await createWorkspace(admin, owner, "Invite Flow");
     const membersPath = `/w/${slug}/settings/members`;
 
-    await page.goto(await magicLinkPath(owner.email, membersPath));
+    await signIn(owner, membersPath);
     await expect(page).toHaveURL(membersPath);
     await expect(page.getByRole("heading", { name: "1 member" })).toBeVisible();
     await expect(page.getByText("No pending invites.")).toBeVisible();
@@ -32,9 +32,7 @@ test.describe("workspaces", () => {
     // The invitee opens the link in their own session.
     const context = await browser.newContext();
     const inviteePage = await context.newPage();
-    await inviteePage.goto(
-      await magicLinkPath(invitee.email, new URL(link).pathname),
-    );
+    await signIn(invitee, new URL(link).pathname, inviteePage);
     await expect(
       inviteePage.getByRole("heading", { name: "Join Invite Flow" }),
     ).toBeVisible();
@@ -87,13 +85,11 @@ test.describe("workspaces", () => {
     page,
     admin,
     user: owner,
-    magicLinkPath,
+    signIn,
   }) => {
     const slug = await createWorkspace(admin, owner, "Revoke Co");
     const email = `e2e+revoke-${uniqueId()}@tessera.test`;
-    await page.goto(
-      await magicLinkPath(owner.email, `/w/${slug}/settings/members`),
-    );
+    await signIn(owner, `/w/${slug}/settings/members`);
 
     await page.getByLabel("Email").fill(email);
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -110,12 +106,12 @@ test.describe("workspaces", () => {
     page,
     admin,
     user,
-    magicLinkPath,
+    signIn,
   }) => {
     const first = await createWorkspace(admin, user, "Alpha Team");
     const second = `beta-${uniqueId()}`;
 
-    await page.goto(await magicLinkPath(user.email, "/w"));
+    await signIn(user, "/w");
     await expect(page.getByRole("link", { name: /Alpha Team/ })).toBeVisible();
 
     await page.getByRole("link", { name: "Create workspace" }).click();
@@ -158,12 +154,12 @@ test.describe("workspaces", () => {
     admin,
     user,
     createUser,
-    magicLinkPath,
+    signIn,
   }) => {
     const stranger = await createUser({ onboarded: true });
     const slug = await createWorkspace(admin, stranger, "Private Co");
 
-    await page.goto(await magicLinkPath(user.email, `/w/${slug}`));
+    await signIn(user, `/w/${slug}`);
     await expect(
       page.getByRole("heading", { name: "Workspace not found" }),
     ).toBeVisible();

@@ -6,8 +6,9 @@ import { authErrorFromParams, toAuthErrorCode } from "@/lib/auth/errors";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { createServerClient } from "@/lib/supabase/server";
 
+// Email links Supabase still sends (sign-up confirmation, invites, email
+// changes). Magic-link sign-in is not offered.
 const emailOtpTypes = [
-  "magiclink",
   "signup",
   "invite",
   "recovery",
@@ -18,7 +19,7 @@ const emailOtpTypes = [
 const callbackParams = z.union([
   // OAuth and email links started in this browser (PKCE).
   z.object({ code: z.string().min(1) }),
-  // Email links verified by token hash (custom email templates, e2e tests).
+  // Email links verified by token hash (custom email templates).
   z.object({
     token_hash: z.string().min(1),
     type: z.enum(emailOtpTypes),

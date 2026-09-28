@@ -1,25 +1,44 @@
 export type AuthErrorCopy = { title: string; description: string };
 
 const COPY = {
+  invalid_credentials: {
+    title: "Wrong email or password",
+    description:
+      "Check the email address and password and try again. Passwords are case-sensitive.",
+  },
+  email_not_confirmed: {
+    title: "Confirm your email first",
+    description:
+      "Open the confirmation email we sent when you created the account, then sign in.",
+  },
+  user_exists: {
+    title: "An account with this email already exists",
+    description: "Sign in with your password instead of creating an account.",
+  },
+  weak_password: {
+    title: "Choose a stronger password",
+    description:
+      "Use at least 8 characters and avoid common or previously leaked passwords.",
+  },
   link_expired: {
     title: "This sign-in link has expired",
     description:
-      "Sign-in links work once and expire after an hour. Request a new one and use the latest email.",
+      "Confirmation and sign-in links work once and expire after an hour. Sign in again to continue.",
   },
   oauth_denied: {
     title: "GitHub sign-in was cancelled",
     description:
-      "GitHub did not share your account with Tessera. Try again and choose Authorize, or use an email link instead.",
+      "GitHub did not share your account with Tessera. Try again and choose Authorize, or sign in with your email and password instead.",
   },
   rate_limited: {
-    title: "Too many sign-in emails",
+    title: "Too many sign-in attempts",
     description:
-      "We have sent several emails to this address recently. Wait a few minutes, then request a new link.",
+      "We received several attempts for this account recently. Wait a few minutes, then try again.",
   },
   unknown: {
     title: "We couldn't sign you in",
     description:
-      "Something went wrong on our side or the link was incomplete. Try signing in again.",
+      "Something went wrong on our side or the request was incomplete. Try signing in again.",
   },
 } satisfies Record<string, AuthErrorCopy>;
 
@@ -31,6 +50,16 @@ export type AuthErrorCode = keyof typeof COPY;
  */
 export function toAuthErrorCode(raw: string | null | undefined): AuthErrorCode {
   switch (raw) {
+    case "invalid_credentials":
+      return "invalid_credentials";
+    case "email_not_confirmed":
+      return "email_not_confirmed";
+    case "user_already_exists":
+    case "email_exists":
+    case "user_exists":
+      return "user_exists";
+    case "weak_password":
+      return "weak_password";
     case "otp_expired":
     case "flow_state_expired":
     case "flow_state_not_found":

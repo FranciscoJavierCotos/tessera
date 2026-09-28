@@ -15,7 +15,7 @@ export default async function SignInPage({
   return (
     <AuthShell
       title="Sign in to Tessera"
-      description="New here? Signing in creates your account."
+      description="Sign in with GitHub or your email and password."
     >
       <SignInForm next={safeNextPath(next)} />
     </AuthShell>

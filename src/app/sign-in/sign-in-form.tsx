@@ -1,18 +1,23 @@
 "use client";
 
 import { CircleAlert, Loader2, MailCheck } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  signInWithEmail,
   signInWithGitHub,
-  type EmailSignInState,
+  signInWithPassword,
+  type PasswordSignInState,
 } from "@/app/auth/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  type AuthMode,
+} from "@/lib/auth/credentials";
 
 function GitHubMark() {
   return (
@@ -52,19 +57,23 @@ function SubmitButton({
   );
 }
 
-const idle: EmailSignInState = { status: "idle" };
+const idle: PasswordSignInState = { status: "idle" };
 
 export function SignInForm({ next }: { next: string }) {
-  const [state, emailAction] = useActionState(signInWithEmail, idle);
+  const [state, passwordAction] = useActionState(signInWithPassword, idle);
+  const [mode, setMode] = useState<AuthMode>(
+    state.status === "error" ? state.mode : "sign-in",
+  );
+  const signingUp = mode === "sign-up";
 
-  if (state.status === "sent") {
+  if (state.status === "confirm") {
     return (
       <Alert>
         <MailCheck aria-hidden />
-        <AlertTitle>Check your email</AlertTitle>
+        <AlertTitle>Confirm your email</AlertTitle>
         <AlertDescription>
-          We sent a sign-in link to <strong>{state.email}</strong>. It works
-          once and expires in an hour. You can close this tab.
+          We sent a confirmation link to <strong>{state.email}</strong>. Open it
+          to finish creating your account, then sign in with your password.
         </AlertDescription>
       </Alert>
     );
@@ -82,7 +91,7 @@ export function SignInForm({ next }: { next: string }) {
 
       <form action={signInWithGitHub}>
         <input type="hidden" name="next" value={next} />
-        <SubmitButton variant="outline" pendingLabel="Redirecting to GitHub…">
+        <SubmitButton variant="outline" pendingLabel="Redirecting to GitHub�">
           <GitHubMark />
           Continue with GitHub
         </SubmitButton>
@@ -94,8 +103,9 @@ export function SignInForm({ next }: { next: string }) {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <form action={emailAction} className="flex flex-col gap-3">
+      <form action={passwordAction} className="flex flex-col gap-3">
         <input type="hidden" name="next" value={next} />
+        <input type="hidden" name="mode" value={mode} />
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Work email</Label>
           <Input
@@ -108,10 +118,43 @@ export function SignInForm({ next }: { next: string }) {
             required
           />
         </div>
-        <SubmitButton pendingLabel="Sending link…">
-          Email me a sign-in link
-        </SubmitButton>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete={signingUp ? "new-password" : "current-password"}
+            minLength={signingUp ? PASSWORD_MIN_LENGTH : undefined}
+            maxLength={PASSWORD_MAX_LENGTH}
+            aria-describedby={signingUp ? "password-hint" : undefined}
+            required
+          />
+          {signingUp && (
+            <p id="password-hint" className="text-xs text-muted-foreground">
+              At least {PASSWORD_MIN_LENGTH} characters.
+            </p>
+          )}
+        </div>
+        {signingUp ? (
+          <SubmitButton pendingLabel="Creating account�">
+            Create account
+          </SubmitButton>
+        ) : (
+          <SubmitButton pendingLabel="Signing in�">Sign in</SubmitButton>
+        )}
       </form>
+
+      <p className="text-center text-sm text-muted-foreground">
+        {signingUp ? "Already have an account?" : "New to Tessera?"}{" "}
+        <button
+          type="button"
+          onClick={() => setMode(signingUp ? "sign-in" : "sign-up")}
+          className="rounded-sm font-medium text-foreground underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
+          {signingUp ? "Sign in" : "Create an account"}
+        </button>
+      </p>
     </>
   );
 }
