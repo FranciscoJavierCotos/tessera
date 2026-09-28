@@ -32,11 +32,11 @@ test.describe("app shell", () => {
     page,
     admin,
     user,
-    magicLinkPath,
+    signIn,
   }) => {
     const slug = await createWorkspace(admin, user, "Shell Co");
 
-    await page.goto(await magicLinkPath(user.email, `/w/${slug}`));
+    await signIn(user, `/w/${slug}`);
     await expect(page).toHaveURL(`/w/${slug}/home`);
 
     for (const colorScheme of ["light", "dark"] as const) {
@@ -61,10 +61,10 @@ test.describe("app shell", () => {
     page,
     admin,
     user,
-    magicLinkPath,
+    signIn,
   }) => {
     const slug = await createWorkspace(admin, user, "Nav Co");
-    await page.goto(await magicLinkPath(user.email, `/w/${slug}/home`));
+    await signIn(user, `/w/${slug}/home`);
 
     // The sidebar lists the registry's features and marks the current one.
     const nav = page.getByRole("navigation", { name: "Workspace" });
@@ -100,10 +100,10 @@ test.describe("app shell", () => {
     page,
     admin,
     user,
-    magicLinkPath,
+    signIn,
   }) => {
     const slug = await createWorkspace(admin, user, "Keys Co");
-    await page.goto(await magicLinkPath(user.email, `/w/${slug}/projects`));
+    await signIn(user, `/w/${slug}/projects`);
     await expect(
       page.getByRole("heading", { level: 1, name: "Projects" }),
     ).toBeVisible();
@@ -132,15 +132,17 @@ test.describe("app shell", () => {
     page,
     admin,
     user,
-    magicLinkPath,
+    signIn,
   }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     const slug = await createWorkspace(admin, user, "Tablet Co");
-    await page.goto(await magicLinkPath(user.email, `/w/${slug}/home`));
+    await signIn(user, `/w/${slug}/home`);
 
     const nav = page.getByRole("navigation", { name: "Workspace" });
     await nav.getByRole("link", { name: "Docs" }).click();
     await expect(page).toHaveURL(`/w/${slug}/docs`);
+    // Streamed metadata sets <title> after the client navigation settles.
+    await expect(page).toHaveTitle(/Docs/);
     expect(await seriousViolations(page)).toEqual([]);
   });
 });

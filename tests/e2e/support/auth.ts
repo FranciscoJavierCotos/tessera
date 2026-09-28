@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { test as base } from "@playwright/test";
+import { test as base, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { env } from "@/env";
@@ -9,6 +9,7 @@ import type { Database } from "@/lib/db/types";
 export type TestUser = {
   id: string;
   email: string;
+  password: string;
   /** Set for onboarded users. */
   handle: string | null;
   displayName: string;
@@ -39,8 +40,10 @@ async function createUser(
   const id = uniqueId();
   const email = `e2e+auth-${id}@tessera.test`;
   const displayName = `E2E ${id}`;
+  const password = `pw-${randomBytes(12).toString("hex")}`;
   const { data, error } = await admin.auth.admin.createUser({
     email,
+    password,
     email_confirm: true,
     user_metadata: { display_name: displayName },
   });
@@ -59,7 +62,7 @@ async function createUser(
       .eq("id", data.user.id);
     if (profile.error) throw new Error(`onboard: ${profile.error.message}`);
   }
-  return { id: data.user.id, email, handle, displayName };
+  return { id: data.user.id, email, password, handle, displayName };
 }
 
 /** Deletes what the user created (workspaces, avatars), then the user. */
@@ -81,8 +84,8 @@ async function deleteUser(admin: Admin, userId: string) {
  *   API, deleted after the test.
  * - `newUser`: a user who has not onboarded yet.
  * - `createUser(opts)`: more users for multi-user tests, deleted afterwards.
- * - `magicLinkPath(email, next)`: the `/auth/callback` path that signs the user
- *   in, built from `auth.admin.generateLink` (no email is sent).
+ * - `signIn(user, next, page)`: signs the user in through the `/sign-in`
+ *   password form (on the test's `page` by default) and waits to leave it.
  * - `admin`: the service-role client for arranging data.
  */
 export const test = base.extend<{
@@ -90,7 +93,7 @@ export const test = base.extend<{
   user: TestUser;
   newUser: TestUser;
   createUser: (opts: { onboarded: boolean }) => Promise<TestUser>;
-  magicLinkPath: (email: string, next?: string) => Promise<string>;
+  signIn: (user: TestUser, next?: string, onPage?: Page) => Promise<void>;
 }>({
   admin: async ({}, provide) => {
     await provide(createAdminClient());
@@ -114,19 +117,15 @@ export const test = base.extend<{
     await provide(await createUser({ onboarded: false }));
   },
 
-  magicLinkPath: async ({ admin }, provide) => {
-    await provide(async (email, next = "/w") => {
-      const { data, error } = await admin.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-      });
-      if (error) throw new Error(`generateLink ${email}: ${error.message}`);
-      const params = new URLSearchParams({
-        token_hash: data.properties.hashed_token,
-        type: "magiclink",
-        next,
-      });
-      return `/auth/callback?${params}`;
+  signIn: async ({ page }, provide) => {
+    await provide(async (user, next = "/w", onPage = page) => {
+      await onPage.goto(`/sign-in?${new URLSearchParams({ next })}`);
+      await onPage.getByLabel("Work email").fill(user.email);
+      await onPage.getByLabel("Password").fill(user.password);
+      await onPage
+        .getByRole("button", { name: "Sign in", exact: true })
+        .click();
+      await onPage.waitForURL((url) => url.pathname !== "/sign-in");
     });
   },
 });

@@ -99,8 +99,14 @@ create and delete their own users through the Admin API, so they need
 
 ### Authentication
 
-Sign-in uses Supabase Auth: email magic link and GitHub OAuth. One-time setup
-in the Supabase dashboard (Authentication):
+Sign-in uses Supabase Auth: email + password and GitHub OAuth (magic links were
+removed; the built-in mailer is too rate limited to rely on). "Create an
+account" on `/sign-in` calls `signUp`; while **Confirm email** is on, new
+accounts must open the confirmation email before signing in, so either set up
+custom SMTP or turn it off for demos. There is no password reset yet; an admin
+sets a password with `auth.admin.updateUserById(id, { password })`.
+
+One-time setup in the Supabase dashboard (Authentication):
 
 - **URL Configuration**: Site URL = the deployed app URL; add
   `http://localhost:3000/auth/callback` (and the deployed

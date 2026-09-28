@@ -4,9 +4,9 @@ test.describe("onboarding", () => {
   test("a new user cannot reach the app before onboarding", async ({
     page,
     newUser,
-    magicLinkPath,
+    signIn,
   }) => {
-    await page.goto(await magicLinkPath(newUser.email));
+    await signIn(newUser);
     await expect(page).toHaveURL("/onboarding");
 
     await page.goto("/w");
@@ -19,11 +19,11 @@ test.describe("onboarding", () => {
   test("name → handle → discipline → create workspace", async ({
     page,
     newUser,
-    magicLinkPath,
+    signIn,
   }) => {
     const handle = `ada_${uniqueId()}`;
     const slug = `ada-${uniqueId()}`;
-    await page.goto(await magicLinkPath(newUser.email));
+    await signIn(newUser);
     await expect(page).toHaveURL("/onboarding");
 
     // Step 1: the name comes prefilled from the auth metadata.
@@ -71,9 +71,9 @@ test.describe("onboarding", () => {
     page,
     user,
     newUser,
-    magicLinkPath,
+    signIn,
   }) => {
-    await page.goto(await magicLinkPath(newUser.email));
+    await signIn(newUser);
     await page.getByRole("button", { name: "Continue" }).click();
 
     await page.getByLabel("Handle").fill(user.handle!);
@@ -86,7 +86,7 @@ test.describe("onboarding", () => {
     admin,
     user,
     newUser,
-    magicLinkPath,
+    signIn,
   }) => {
     const { data: workspace, error } = await admin
       .from("workspaces")
@@ -107,7 +107,7 @@ test.describe("onboarding", () => {
     });
     if (invite.error) throw new Error(invite.error.message);
 
-    await page.goto(await magicLinkPath(newUser.email, "/w?from=invite"));
+    await signIn(newUser, "/w?from=invite");
     await expect(page).toHaveURL("/onboarding?next=%2Fw%3Ffrom%3Dinvite");
 
     await page.getByRole("button", { name: "Continue" }).click();

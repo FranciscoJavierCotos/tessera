@@ -87,8 +87,23 @@ minRole? }`), so later milestones add entries by config. Routes
   shell route in light and dark mode for serious or critical WCAG 2.1 AA
   violations, plus keyboard and tablet-width checks.
 
+### Changed
+
+- Sign-in uses email + password instead of email magic links (#17): the
+  built-in Supabase mailer is rate limited to a couple of emails per hour, so
+  links often never arrived. `/sign-in` has a password form with a "Create an
+  account" mode (`signUp`; min 8, max 72 characters, Zod-validated) next to
+  GitHub OAuth; the Server Action applies the onboarding guard itself because
+  the proxy does not run for a Server Action's redirect target. New error copy
+  for wrong credentials, unconfirmed email, existing account and weak password.
+  The callback no longer accepts `type=magiclink`. e2e users get a random
+  password and sign in through the form (`signIn` fixture replaces
+  `magicLinkPath`).
+
 ### Fixed
 
+- Shell tablet e2e waits for the page `<title>` before the axe check (it was
+  flaky after client-side navigation).
 - Entities select/update policies now check the row's own columns, so
   `insert … returning` (`.insert().select()`) works for the entity's owner
   (migration `entities_rls_row_checks`).

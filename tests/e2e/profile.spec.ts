@@ -11,9 +11,9 @@ test.describe("profile", () => {
     page,
     admin,
     user,
-    magicLinkPath,
+    signIn,
   }) => {
-    await page.goto(await magicLinkPath(user.email, `/u/${user.handle}`));
+    await signIn(user, `/u/${user.handle}`);
     await expect(page).toHaveURL(`/u/${user.handle}`);
     await expect(
       page.getByRole("heading", { name: "Owned assets" }),
@@ -77,7 +77,7 @@ test.describe("profile", () => {
     admin,
     user,
     createUser,
-    magicLinkPath,
+    signIn,
   }) => {
     const peer = await createUser({ onboarded: true });
     const stranger = await createUser({ onboarded: true });
@@ -95,7 +95,7 @@ test.describe("profile", () => {
       .from("workspace_members")
       .insert({ workspace_id: workspace.id, user_id: peer.id, role: "member" });
 
-    await page.goto(await magicLinkPath(user.email, `/u/${peer.handle}`));
+    await signIn(user, `/u/${peer.handle}`);
     await expect(
       page.getByRole("heading", { name: peer.displayName }),
     ).toBeVisible();
