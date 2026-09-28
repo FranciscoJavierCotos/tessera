@@ -291,7 +291,7 @@ with a demo workspace._
 
 #### C01 — Projects
 
-**Depends on:** F08 · **Delivered:** #PRNUM
+**Depends on:** F08 · **Delivered:** #22
 **Goal:** the collaborative unit of work.
 
 - [x] Migration: `projects` (extends `entities`), `project_members`.
