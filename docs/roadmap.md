@@ -236,7 +236,7 @@ teammate, and see an empty but navigable shell. CI green; RLS tested._
 **Depends on:** F03
 **Goal:** users can sign up, sign in, and sign out securely.
 
-- [ ] Email magic link + GitHub OAuth (Supabase Auth).
+- [ ] Email + password + GitHub OAuth (Supabase Auth). _(Magic links replaced by passwords in #17.)_
 - [ ] `proxy.ts` (Next.js 16 `middleware.ts`) refreshes the session and protects `/w/*` routes.
 - [ ] Sign-in page, auth callback route, sign-out action.
 - [ ] Error states (expired link, OAuth denied) in plain language.

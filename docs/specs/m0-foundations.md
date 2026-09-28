@@ -165,15 +165,18 @@ Automated tests do not depend on it.
 
 ## F05 — Authentication
 
-- Providers: email magic link (OTP) and GitHub OAuth (Supabase Auth). The GitHub
+- Providers: email + password and GitHub OAuth (Supabase Auth). Magic links were
+  replaced by passwords in #17 (built-in mailer too rate limited). Sign-up
+  shares `/sign-in` ("Create an account"; 8–72 characters). The GitHub
   OAuth app callback is `https://ijhtgvmcyrzmkmfiavnu.supabase.co/auth/v1/callback`.
 - Routes: `/sign-in`, `/auth/callback` (PKCE code exchange), `/auth/error`, sign-out Server Action.
 - `src/proxy.ts` (Next.js 16 rename of `middleware.ts`): refresh session via `@supabase/ssr`; unauthenticated
   `/w/*`, `/u/*`, `/onboarding` → `/sign-in?next=<path>`. `next` must be a
   same-origin relative path (open-redirect guard).
-- Error copy for: expired/used link, OAuth denied, email rate limited.
-- e2e: create user through the Admin API, sign in with a generated magic link
-  (`auth.admin.generateLink`), land on `/w`.
+- Error copy for: wrong email or password, unconfirmed email, existing account,
+  weak password, expired/used link, OAuth denied, rate limited.
+- e2e: create user with a random password through the Admin API, sign in
+  through the `/sign-in` form (`signIn` fixture), land on `/w`.
 
 ## F06 — Onboarding & user profile
 
