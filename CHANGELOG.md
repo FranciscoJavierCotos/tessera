@@ -89,6 +89,9 @@ minRole? }`), so later milestones add entries by config. Routes
 
 ### Changed
 
+- M0 — Foundations is complete (#19): roadmap, M0 spec, architecture spec and
+  README record what was delivered, the deviations from the plan, and the
+  known gaps carried into M1.
 - Sign-in uses email + password instead of email magic links (#17): the
   built-in Supabase mailer is rate limited to a couple of emails per hour, so
   links often never arrived. `/sign-in` has a password form with a "Create an

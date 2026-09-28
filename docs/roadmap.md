@@ -1,9 +1,9 @@
 ---
 title: "Tessera — Implementation Roadmap (MVP → v1.0)"
 type: roadmap
-status: draft
+status: active
 created: 2026-09-26
-updated: 2026-09-26
+updated: 2026-09-29
 tags: [tessera, data-team, roadmap, planning, portfolio]
 ---
 
@@ -183,96 +183,102 @@ story also implicitly includes the
 _End state: a deployed app where you can sign in, create a workspace, invite a
 teammate, and see an empty but navigable shell. CI green; RLS tested._
 
+> ✅ **Done — 2026-09-29.** All eight stories merged (PRs #9–#16, plus #18
+> replacing magic links with passwords), deployed at
+> <https://tessera-data.vercel.app>, sign-in verified by hand. What was actually
+> built, and the known gaps carried into M1, are in the
+> [M0 spec](specs/m0-foundations.md#m0-delivered).
+
 #### F01 — Repository scaffold & tooling
 
-**Depends on:** —
+**Depends on:** — · **Delivered:** #9
 **Goal:** a clean, strict, reproducible Next.js + TypeScript project.
 
-- [ ] `pnpm create next-app` (App Router, TS strict, `src/`, ESLint), Node 24 LTS pinned in `.nvmrc` + `engines`.
-- [ ] Tailwind v4 + shadcn/ui init; base theme tokens (light/dark).
-- [ ] Prettier + `eslint-config-prettier`; `.editorconfig`.
-- [ ] Vitest configured (`pnpm test`); Playwright installed (`pnpm test:e2e`) with one smoke test.
-- [ ] `src/env.ts`: Zod-validated env vars (the app fails fast on missing config); `.env.example`.
-- [ ] `README.md` skeleton (pitch, stack, local setup), `LICENSE` (Apache-2.0), `CLAUDE.md` with conventions.
+- [x] `pnpm create next-app` (App Router, TS strict, `src/`, ESLint), Node 24 LTS pinned in `.nvmrc` + `engines`.
+- [x] Tailwind v4 + shadcn/ui init; base theme tokens (light/dark).
+- [x] Prettier + `eslint-config-prettier`; `.editorconfig`.
+- [x] Vitest configured (`pnpm test`); Playwright installed (`pnpm test:e2e`) with one smoke test.
+- [x] `src/env.ts`: Zod-validated env vars (the app fails fast on missing config); `.env.example`.
+- [x] `README.md` skeleton (pitch, stack, local setup), `LICENSE` (Apache-2.0), `CLAUDE.md` with conventions.
       **Acceptance:** `pnpm dev` renders a landing page; `pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass locally.
 
 #### F02 — CI pipeline
 
-**Depends on:** F01
+**Depends on:** F01 · **Delivered:** #10
 **Goal:** nothing merges to `main` without passing checks.
 
-- [ ] `.github/workflows/ci.yml`: pnpm cache → lint → typecheck → unit tests → build.
-- [ ] Branch protection on `main` (required checks, PR-only, squash merge).
-- [ ] Conventional Commits documented in `CONTRIBUTING.md` (lightweight version).
+- [x] `.github/workflows/ci.yml`: pnpm cache → lint → typecheck → unit tests → build.
+- [x] Branch protection on `main` (required checks, PR-only, squash merge).
+- [x] Conventional Commits documented in `CONTRIBUTING.md` (lightweight version).
       **Acceptance:** a PR with a failing test is blocked; a green PR can merge.
 
 #### F03 — Supabase project, migrations & core schema
 
-**Depends on:** F01
+**Depends on:** F01 · **Delivered:** #11
 **Goal:** a versioned database with the entity core and default-deny RLS.
 
-- [ ] `supabase init` + link to the cloud project; `pnpm db:push|db:types|db:lint|db:seed` scripts. **No local stack and no Docker:** every environment (dev, tests, CI) uses the Supabase Cloud project.
-- [ ] Migration `0001_core`: `profiles`, `workspaces`, `workspace_members`, `invites`, `entities` (+ enums for roles, discipline, entity type, visibility).
-- [ ] Trigger: create a `profiles` row on `auth.users` insert.
-- [ ] `security definer` helpers: `is_workspace_member`, `workspace_role`, `can_read_entity`, `can_write_entity` (with `search_path` pinned).
-- [ ] RLS **enabled on every table**; policies for the tables above.
-- [ ] Generated types committed to `src/lib/db/types.ts`; typed server and browser Supabase clients (`@supabase/ssr`).
-- [ ] `supabase/seed.sql` (idempotent) with the dev users and workspaces, loaded into the cloud project on demand.
+- [x] `supabase init` + link to the cloud project; `pnpm db:push|db:types|db:lint|db:seed` scripts. **No local stack and no Docker:** every environment (dev, tests, CI) uses the Supabase Cloud project.
+- [x] Migration `0001_core`: `profiles`, `workspaces`, `workspace_members`, `invites`, `entities` (+ enums for roles, discipline, entity type, visibility).
+- [x] Trigger: create a `profiles` row on `auth.users` insert.
+- [x] `security definer` helpers: `is_workspace_member`, `workspace_role`, `can_read_entity`, `can_write_entity` (with `search_path` pinned).
+- [x] RLS **enabled on every table**; policies for the tables above.
+- [x] Generated types committed to `src/lib/db/types.ts`; typed server and browser Supabase clients (`@supabase/ssr`).
+- [x] `supabase/seed.sql` (idempotent) with the dev users and workspaces, loaded into the cloud project on demand.
       **Acceptance:** the migration applies cleanly to the cloud project and its version matches the file in `supabase/migrations`; types generated from the cloud project compile; `get_advisors` security lint is clean.
 
 #### F04 — RLS test harness + DB job in CI
 
-**Depends on:** F02, F03
+**Depends on:** F02, F03 · **Delivered:** #12
 **Goal:** authorization is tested against real Postgres, not assumed.
 
-- [ ] `tests/db/` Vitest suite against the Supabase Cloud project. Fixtures (users A in workspace 1, B in workspace 2, viewer V) are created per run through the Admin API with unique emails and deleted afterwards.
-- [ ] Helpers: `asUser(user)` returns an authenticated client; `expectDenied(query)`.
-- [ ] Cases: cross-workspace read denied; viewer cannot write; private entity hidden from other members.
-- [ ] CI job: runs the db tests against the cloud project (URL and keys from GitHub secrets; no Docker), plus the security advisor / `supabase db lint --linked`.
+- [x] `tests/db/` Vitest suite against the Supabase Cloud project. Fixtures (users A in workspace 1, B in workspace 2, viewer V) are created per run through the Admin API with unique emails and deleted afterwards.
+- [x] Helpers: `asUser(user)` returns an authenticated client; `expectDenied(query)`.
+- [x] Cases: cross-workspace read denied; viewer cannot write; private entity hidden from other members.
+- [x] CI job: runs the db tests against the cloud project (URL and keys from GitHub secrets; no Docker), plus the security advisor / `supabase db lint --linked`.
       **Acceptance:** removing any policy makes at least one test fail (spot-check two policies).
 
 #### F05 — Authentication
 
-**Depends on:** F03
+**Depends on:** F03 · **Delivered:** #13, #18
 **Goal:** users can sign up, sign in, and sign out securely.
 
-- [ ] Email + password + GitHub OAuth (Supabase Auth). _(Magic links replaced by passwords in #17.)_
-- [ ] `proxy.ts` (Next.js 16 `middleware.ts`) refreshes the session and protects `/w/*` routes.
-- [ ] Sign-in page, auth callback route, sign-out action.
-- [ ] Error states (expired link, OAuth denied) in plain language.
+- [x] Email + password + GitHub OAuth (Supabase Auth). _(Magic links replaced by passwords in #17.)_
+- [x] `proxy.ts` (Next.js 16 `middleware.ts`) refreshes the session and protects `/w/*` routes.
+- [x] Sign-in page, auth callback route, sign-out action.
+- [x] Error states (expired link, OAuth denied) in plain language.
       **Acceptance:** Playwright e2e signs in with a test user (Supabase Admin API creates the user) and reaches `/w`; signed-out access to `/w/*` redirects to sign-in.
 
 #### F06 — Onboarding & user profile
 
-**Depends on:** F05
+**Depends on:** F05 · **Delivered:** #14
 **Goal:** every user has an individual identity with a discipline.
 
-- [ ] First-login flow: display name, unique `handle`, **discipline** (data analyst / data scientist / data engineer / analytics engineer / lead), then create or join a workspace.
-- [ ] Profile page `/u/[handle]`: avatar (Supabase Storage), bio, skills (tags), links; editable by the owner only.
-- [ ] Profile shows placeholders for owned assets and recent activity (filled by C02 and C07).
+- [x] First-login flow: display name, unique `handle`, **discipline** (data analyst / data scientist / data engineer / analytics engineer / lead), then create or join a workspace.
+- [x] Profile page `/u/[handle]`: avatar (Supabase Storage), bio, skills (tags), links; editable by the owner only.
+- [x] Profile shows placeholders for owned assets and recent activity (filled by C02 and C07).
       **Acceptance:** a new user cannot reach the app without finishing onboarding; handle uniqueness is enforced in the DB, not just the UI.
 
 #### F07 — Workspaces, membership & invites
 
-**Depends on:** F06, F04
+**Depends on:** F06, F04 · **Delivered:** #15
 **Goal:** multi-tenant teams with roles.
 
-- [ ] Create workspace (name, slug); creator becomes `owner`.
-- [ ] Invite by email: `invites` row with hashed token and 7-day expiry, accept page, email through a pluggable mailer (console in dev, Resend later).
-- [ ] Members settings page: change role, remove member; **guard: the last owner cannot leave or be demoted** (DB constraint or trigger, not just UI).
-- [ ] Workspace switcher.
-- [ ] RLS tests for roles (admin can invite; member cannot; viewer is read-only).
+- [x] Create workspace (name, slug); creator becomes `owner`.
+- [x] Invite by email: `invites` row with hashed token and 7-day expiry, accept page, email through a pluggable mailer (console in dev, Resend later).
+- [x] Members settings page: change role, remove member; **guard: the last owner cannot leave or be demoted** (DB constraint or trigger, not just UI).
+- [x] Workspace switcher.
+- [x] RLS tests for roles (admin can invite; member cannot; viewer is read-only).
       **Acceptance:** two users in the same workspace see each other in the members list; a user in another workspace sees nothing.
 
 #### F08 — App shell & design system baseline
 
-**Depends on:** F07
+**Depends on:** F07 · **Delivered:** #16
 **Goal:** a consistent, navigable frame every feature plugs into.
 
-- [ ] Route structure `/w/[workspace]/{home,projects,catalog,docs,settings}`.
-- [ ] Sidebar with feature registry (later milestones add entries by config), top bar, breadcrumbs.
-- [ ] Shared components: empty state, page header, data table (TanStack Table), toasts, confirm dialog, loading skeletons, error boundary, 404.
-- [ ] Dark mode, keyboard focus states, responsive down to tablet.
+- [x] Route structure `/w/[workspace]/{home,projects,catalog,docs,settings}`.
+- [x] Sidebar with feature registry (later milestones add entries by config), top bar, breadcrumbs.
+- [x] Shared components: empty state, page header, data table (TanStack Table), toasts, confirm dialog, loading skeletons, error boundary, 404.
+- [x] Dark mode, keyboard focus states, responsive down to tablet.
       **Acceptance:** every route renders an empty state; Playwright + axe reports no serious a11y violations on the shell.
 
 ---
@@ -849,7 +855,7 @@ Title format: `<ID> — <title>`, e.g. `C05 — Mentions & backlinks`.
 
 | Milestone                     | Stories                                           | Release    |
 | ----------------------------- | ------------------------------------------------- | ---------- |
-| M0 Foundations                | 8 (F01–F08)                                       | —          |
+| M0 Foundations                | 8 (F01–F08)                                       | — ✅ done  |
 | M1 Collaboration MVP          | 10 (C01–C10)                                      | **v0.1.0** |
 | M2 Integrations & reliability | 10 (I01–I02, Q01–Q02, P01–P02, R01–R02, A01, N01) | v0.2.0     |
 | M3 Design & architecture      | 6 (D01–D06)                                       | v0.3.0     |

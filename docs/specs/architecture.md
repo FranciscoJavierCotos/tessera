@@ -1,6 +1,6 @@
 # Tessera — Architecture Spec
 
-Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architecture-decisions)
+Status: accepted; implemented through M0 (done 2026-09-29) · Source: [roadmap §2](../roadmap.md#2-stack--architecture-decisions)
 
 ## 1. Principles
 
@@ -17,22 +17,23 @@ Status: accepted for M0 · Source: [roadmap §2](../roadmap.md#2-stack--architec
 
 ## 2. Stack
 
-| Concern                          | Choice                                                                               |
-| -------------------------------- | ------------------------------------------------------------------------------------ |
-| Language                         | TypeScript, `strict: true`, end to end                                               |
-| Web                              | Next.js 16 (App Router, RSC, Server Actions)                                         |
-| Data / Auth / Realtime / Storage | Supabase (Postgres 15+), `@supabase/ssr`                                             |
-| Migrations                       | Supabase CLI, `supabase/migrations/*.sql`, applied to the cloud project (no Docker)  |
-| DB types                         | `supabase gen types typescript` → `src/lib/db/types.ts` (committed)                  |
-| Validation                       | Zod (forms, server actions, env, public API)                                         |
-| UI                               | Tailwind CSS v4, shadcn/ui (Radix), lucide-react                                     |
-| Graphs & canvases                | React Flow (`@xyflow/react`) + elkjs                                                 |
-| Rich text                        | Tiptap                                                                               |
-| Tests                            | Vitest (unit), Vitest + Supabase Cloud (DB/RLS), Playwright + axe (e2e/a11y)         |
-| CI                               | GitHub Actions                                                                       |
-| Hosting                          | Vercel + Supabase Cloud (project `tessera`, ref `ijhtgvmcyrzmkmfiavnu`, `eu-west-3`) |
-| Package manager                  | pnpm; Node 24 LTS (`.nvmrc`)                                                         |
-| License                          | Apache-2.0                                                                           |
+| Concern                          | Choice                                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Language                         | TypeScript, `strict: true`, end to end                                                                   |
+| Web                              | Next.js 16 (App Router, RSC, Server Actions)                                                             |
+| Data / Auth / Realtime / Storage | Supabase (Postgres 15+), `@supabase/ssr`                                                                 |
+| Sign-in                          | Supabase Auth: email + password, GitHub OAuth (magic links removed in #18)                               |
+| Migrations                       | Supabase CLI, `supabase/migrations/*.sql`, applied to the cloud project (no Docker)                      |
+| DB types                         | `supabase gen types typescript` → `src/lib/db/types.ts` (committed)                                      |
+| Validation                       | Zod (forms, server actions, env, public API)                                                             |
+| UI                               | Tailwind CSS v4, shadcn/ui (Radix), lucide-react                                                         |
+| Graphs & canvases                | React Flow (`@xyflow/react`) + elkjs                                                                     |
+| Rich text                        | Tiptap                                                                                                   |
+| Tests                            | Vitest (unit), Vitest + Supabase Cloud (DB/RLS), Playwright + axe (e2e/a11y)                             |
+| CI                               | GitHub Actions                                                                                           |
+| Hosting                          | Vercel (`tessera-data.vercel.app`) + Supabase Cloud (`tessera`, ref `ijhtgvmcyrzmkmfiavnu`, `eu-west-3`) |
+| Package manager                  | pnpm; Node 24 LTS (`.nvmrc`)                                                                             |
+| License                          | Apache-2.0                                                                                               |
 
 Single Next.js app (not a monorepo) until a second package exists (SDK, O04).
 
@@ -52,11 +53,11 @@ pg_cron ─► SLA / staleness checks ─► activity_events → notifications
 
 ### Supabase clients (`src/lib/supabase/`)
 
-| Client                | Where                               | Key                        | Purpose                                                                                                                                      |
-| --------------------- | ----------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createBrowserClient` | Client Components                   | publishable (anon)         | Realtime, client-side reads                                                                                                                  |
-| `createServerClient`  | RSC, Server Actions, route handlers | publishable + user cookies | All normal app reads/writes, under RLS                                                                                                       |
-| `createServiceClient` | `/api/v1/*`, admin scripts, tests   | service role               | **Server-only.** Must always be wrapped by a helper that injects `workspace_id`; never imported from client code (enforced by `server-only`) |
+| Client                | Where                               | Key                        | Purpose                                                                                                                                                                   |
+| --------------------- | ----------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createBrowserClient` | Client Components                   | publishable (anon)         | Realtime, client-side reads                                                                                                                                               |
+| `createServerClient`  | RSC, Server Actions, route handlers | publishable + user cookies | All normal app reads/writes, under RLS                                                                                                                                    |
+| `createServiceClient` | `/api/v1/*`, admin scripts, tests   | service role               | **Server-only.** Must always be wrapped by a helper that injects `workspace_id`; never imported from client code (enforced by `server-only`). Unused by app code as of M0 |
 
 ## 4. Core data model
 
