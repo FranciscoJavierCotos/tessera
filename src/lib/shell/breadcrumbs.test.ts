@@ -33,6 +33,23 @@ describe("workspaceBreadcrumbs", () => {
     ]);
   });
 
+  it("identifiers such as qualified names keep their spelling", () => {
+    expect(
+      workspaceBreadcrumbs(
+        "/w/acme/catalog/analytics.marts.fct_orders/edit",
+        acme,
+      ),
+    ).toEqual([
+      { label: "Acme Data", href: "/w/acme/home" },
+      { label: "Catalog", href: "/w/acme/catalog" },
+      {
+        label: "analytics.marts.fct_orders",
+        href: "/w/acme/catalog/analytics.marts.fct_orders",
+      },
+      { label: "Edit" },
+    ]);
+  });
+
   it("paths outside the workspace only show the workspace", () => {
     expect(workspaceBreadcrumbs("/w/other/home", acme)).toEqual([
       { label: "Acme Data", href: "/w/acme/home" },

@@ -304,15 +304,15 @@ with a demo workspace._
 
 #### C02 — Asset catalog core
 
-**Depends on:** C01
+**Depends on:** C01 · **Delivered:** #23
 **Goal:** a shared inventory of the team's data assets with owners.
 
-- [ ] Migration: `assets` (kind, `qualified_name` unique per workspace, `properties jsonb`, tags), `dataset_columns`, `project_assets`.
-- [ ] Create/edit a **dataset** manually: name, qualified name (`db.schema.table`), description (markdown), owner, tags, columns (name, type, description, PII flag).
-- [ ] Other kinds with generic forms: `dashboard` (URL, tool), `source_system`, `ml_model`.
-- [ ] Catalog list: filter by kind, owner, tag, project; sort; paginate.
-- [ ] Asset page with tabs: Overview · Columns · Lineage (C03) · Docs & mentions (C05) · Discussion (C06).
-- [ ] Link and unlink assets to projects.
+- [x] Migration: `assets` (kind, `qualified_name` unique per workspace, `properties jsonb`, tags), `dataset_columns`, `project_assets`.
+- [x] Create/edit a **dataset** manually: name, qualified name (`db.schema.table`), description (markdown), owner, tags, columns (name, type, description, PII flag).
+- [x] Other kinds with generic forms: `dashboard` (URL, tool), `source_system`, `ml_model`.
+- [x] Catalog list: filter by kind, owner, tag, project; sort; paginate.
+- [x] Asset page with tabs: Overview · Columns · Lineage (C03) · Docs & mentions (C05) · Discussion (C06).
+- [x] Link and unlink assets to projects.
       **Acceptance:** CRUD works under RLS; `qualified_name` duplicates are rejected with a clear message; PII columns show a badge.
 
 #### C03 — Asset graph & lineage view

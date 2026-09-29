@@ -105,6 +105,33 @@ minRole? }`), so later milestones add entries by config. Routes
   row in one transaction). Migration `projects_fk_indexes` covers the new
   composite FKs. RLS tests (visibility, roles, members, slugs) and e2e for the
   create → filter → edit → archive flow and the role checks.
+- Asset catalog core (C02, #23): `/w/[workspace]/catalog` lists the
+  workspace's assets with filters (kind, owner, tag, project), sort (recently
+  updated, name, kind) and pagination (25 per page), all in the URL;
+  `/catalog/new` registers a **dataset** (name, qualified name
+  `db.schema.table`, markdown description, owner, tags, ordered columns with
+  type, description and a PII flag) or a `dashboard` (URL, tool),
+  `source_system` or `ml_model`; `/catalog/[qualified name]` is the asset
+  page with tabs Overview · Columns (datasets, PII badges) · Lineage · Docs &
+  mentions · Discussion (the last three are placeholders for C03, C05, C06);
+  `/catalog/[qualified name]/edit` edits it and lets the owner or a workspace
+  admin delete it. Assets link to and unlink from projects (project leads and
+  contributors), and the project home lists its linked assets. The profile
+  page lists the assets a person owns. Duplicate qualified names (compared
+  case-insensitively) are rejected with a field message. Migration
+  `assets_catalog`: enum `asset_kind`; `assets` extends `entities`
+  (composite FK), `qualified_name` citext unique per workspace and free of URL
+  characters, `properties jsonb`, validated `tags text[]` (GIN index);
+  `dataset_columns` only attach to datasets (FK on the kind) and keep their id
+  across edits; `project_assets` links assets and projects of the same
+  workspace; an asset's kind is immutable and an entity's owner must be a
+  workspace member (triggers); security-invoker view `catalog_assets`; RPCs
+  `create_asset`, `update_asset` and `set_dataset_columns`. Migration
+  `dataset_columns_case_fix` matches existing columns case-insensitively.
+  Markdown rendering through `react-markdown` + `remark-gfm` (no raw HTML).
+  RLS tests (creation, uniqueness, viewer read-only, isolation, columns,
+  project links, deletion) and e2e for register → duplicate → filter → edit →
+  delete, project linking and viewer read-only access (with axe checks).
 
 ### Changed
 

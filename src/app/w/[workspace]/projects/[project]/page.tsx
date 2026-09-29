@@ -1,4 +1,4 @@
-import { Activity, Archive, Database, FileText, Settings } from "lucide-react";
+import { Activity, Archive, FileText, Settings } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { assetPath } from "@/lib/asset/paths";
 import { avatarUrl, requireUser } from "@/lib/profile/server";
 import { projectPath } from "@/lib/project/paths";
 import { canEditProject, canManageProject } from "@/lib/project/roles";
@@ -16,6 +17,7 @@ import { workspacePath } from "@/lib/workspace/paths";
 import { getMyWorkspace } from "@/lib/workspace/server";
 
 import { StatusBadge, VisibilityLabel } from "../projects-table";
+import { LinkedAssets } from "./linked-assets";
 import { ProjectMembers } from "./project-members";
 
 export async function generateMetadata({
@@ -42,7 +44,7 @@ export default async function ProjectPage({
   const canEdit = canEditProject(workspace.role, project.myRole);
   const canManage = canManageProject(workspace.role, project.myRole);
 
-  const [members, workspaceMembers] = await Promise.all([
+  const [members, workspaceMembers, links] = await Promise.all([
     supabase
       .from("project_members")
       .select("user_id, role, profiles(display_name, handle, avatar_path)")
@@ -54,10 +56,24 @@ export default async function ProjectPage({
           .select("user_id, profiles(display_name, handle)")
           .eq("workspace_id", workspace.id)
       : null,
+    supabase
+      .from("project_assets")
+      .select("asset_id")
+      .eq("project_id", project.id)
+      .order("added_at"),
   ]);
-  if (members.error || workspaceMembers?.error) {
-    throw new Error("Could not load the project members.");
+  if (members.error || workspaceMembers?.error || links.error) {
+    throw new Error("Could not load the project.");
   }
+  const linkedIds = links.data.map((l) => l.asset_id);
+  const linkedAssets = linkedIds.length
+    ? await supabase
+        .from("catalog_assets")
+        .select("id, name, qualified_name, kind")
+        .in("id", linkedIds)
+        .order("name")
+    : null;
+  if (linkedAssets?.error) throw new Error("Could not load the linked assets.");
 
   const avatars = await Promise.all(
     members.data.map((m) =>
@@ -146,11 +162,23 @@ export default async function ProjectPage({
             <h2 id="assets-heading" className="text-base font-semibold">
               Linked assets
             </h2>
-            <EmptyState
-              icon={Database}
-              headingLevel={3}
-              title="No linked assets"
-              description="Datasets, dashboards and models the project uses will be listed here."
+            <LinkedAssets
+              projectId={project.id}
+              canEdit={canEdit}
+              catalogHref={workspacePath(workspace.slug, "catalog")}
+              assets={(linkedAssets?.data ?? []).flatMap((asset) =>
+                asset.id && asset.qualified_name && asset.kind
+                  ? [
+                      {
+                        id: asset.id,
+                        name: asset.name ?? asset.qualified_name,
+                        qualifiedName: asset.qualified_name,
+                        kind: asset.kind,
+                        href: assetPath(workspace.slug, asset.qualified_name),
+                      },
+                    ]
+                  : [],
+              )}
             />
           </section>
 
