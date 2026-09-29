@@ -137,6 +137,29 @@ project of the same workspace; project leads/contributors (and workspace
 owners/admins) link and unlink, and a link is visible only to someone who can
 see both sides.
 
+### Dataset files & schema history (C11)
+
+- `dataset_files`: immutable file versions of a dataset (highest = current).
+  Objects live in the private Storage bucket `dataset-files` (50 MB, CSV and
+  Parquet) at `{workspace}/{asset}/{file}/{safe name}`; Storage RLS reuses
+  `can_read_entity` / `can_write_entity` through
+  `private.dataset_file_asset(name)`, and a trigger requires the object to
+  exist before a row points at it (size taken from Storage). Users never
+  update or delete objects: the service role (scoped by workspace) purges
+  objects beyond the newest 10 (`purged_at`) and removes them when the
+  dataset is deleted. Uploads that are never committed leave orphan objects
+  (accepted until a cleanup job exists).
+- `dataset_schema_versions`: append-only snapshots of a dataset's columns,
+  written by `set_dataset_columns` whenever the columns change (source
+  `manual` or `file`); a per-dataset advisory lock keeps versions
+  consecutive, and an empty schema is never the first snapshot.
+- Upload flow: the browser parses the file (hyparquet reads the Parquet
+  footer; papaparse streams CSV in chunks and infers types) → server action
+  `prepareDatasetFileUpload` returns a signed upload URL → the browser PUTs
+  the file to Storage → `commitDatasetFile` calls the `add_dataset_file`
+  RPC, which records the version and applies the reviewed columns in one
+  transaction. Files never pass through Next.js (request body limits).
+
 ### RLS helper functions
 
 All `security definer`, `stable`, `set search_path = ''`, fully-qualified names,

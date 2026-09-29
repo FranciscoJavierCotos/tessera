@@ -36,45 +36,47 @@
 
 ## File Structure
 
-| File | Responsibility |
-| --- | --- |
-| `src/lib/dataset-file/limits.ts` | Constants, format detection, safe object names, storage path, `checkFile`, `filesToPurge` |
-| `src/lib/dataset-file/format.ts` | `formatBytes`, `summarizeFile`, `formatTimestamp` (display only) |
-| `src/lib/dataset-file/types.ts` | `ParsedSchema`, `DatasetFileError`, `validateColumnNames` |
-| `src/lib/dataset-file/parse-csv.ts` | CSV → schema (streaming builder + type inference) |
-| `src/lib/dataset-file/parse-parquet.ts` | Parquet footer → schema (readable type names) |
-| `src/lib/dataset-file/parse.ts` | `parseDatasetFile(file)`: check + dispatch, returns a result object |
-| `src/lib/dataset-file/schema-diff.ts` | `diffSchemas`, `hasChanges`, `mergeCarryOver`, `describeDiff` |
-| `src/lib/dataset-file/schema.ts` | Zod schemas for the actions, `snapshotColumns` |
-| `src/lib/dataset-file/server.ts` | Reads (files, schema versions) + service-role `purgeOldDatasetFiles`, `removeStoredFiles` |
-| `src/lib/dataset-file/upload.ts` | `putFile` (XHR PUT with progress) |
-| `supabase/migrations/<ts>_dataset_files.sql` | Enums, bucket, tables, RLS, trigger, functions, backfill |
-| `tests/db/dataset-files.test.ts` | RLS + function tests against the cloud project |
-| `src/app/w/[workspace]/catalog/dataset-file-actions.ts` | Server actions: prepare, commit, download URL |
-| `src/app/w/[workspace]/catalog/upload-dataset-file.ts` | Client orchestration prepare → put → commit |
-| `src/components/asset/dataset-file-picker.tsx` | Drop zone / file button, parse state, errors |
-| `src/components/asset/upload-progress.tsx` | Accessible progress bar |
-| `src/components/asset/schema-diff-list.tsx` | Renders a `SchemaDiff` (added / removed / type / meta) |
-| `src/app/w/[workspace]/catalog/asset-form.tsx` (modify) | New dataset from a file |
-| `src/app/w/[workspace]/catalog/actions.ts` (modify) | `createAsset` "created" state; `deleteAsset` removes stored files |
-| `src/app/w/[workspace]/catalog/[asset]/schema-review.tsx` | Diff + editable description/PII of the proposed columns |
-| `src/app/w/[workspace]/catalog/[asset]/upload-version.tsx` | "Upload new version" dialog flow |
-| `src/app/w/[workspace]/catalog/[asset]/files-tab.tsx` | Current file + previous versions |
-| `src/app/w/[workspace]/catalog/[asset]/download-file-button.tsx` | Signed-URL download |
-| `src/app/w/[workspace]/catalog/[asset]/history-tab.tsx` | Schema version timeline |
-| `src/app/w/[workspace]/catalog/[asset]/page.tsx` (modify) | Files + History tabs, upload on Columns tab |
-| `tests/e2e/dataset-files.spec.ts` | End-to-end flow |
+| File                                                             | Responsibility                                                                            |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/lib/dataset-file/limits.ts`                                 | Constants, format detection, safe object names, storage path, `checkFile`, `filesToPurge` |
+| `src/lib/dataset-file/format.ts`                                 | `formatBytes`, `summarizeFile`, `formatTimestamp` (display only)                          |
+| `src/lib/dataset-file/types.ts`                                  | `ParsedSchema`, `DatasetFileError`, `validateColumnNames`                                 |
+| `src/lib/dataset-file/parse-csv.ts`                              | CSV → schema (streaming builder + type inference)                                         |
+| `src/lib/dataset-file/parse-parquet.ts`                          | Parquet footer → schema (readable type names)                                             |
+| `src/lib/dataset-file/parse.ts`                                  | `parseDatasetFile(file)`: check + dispatch, returns a result object                       |
+| `src/lib/dataset-file/schema-diff.ts`                            | `diffSchemas`, `hasChanges`, `mergeCarryOver`, `describeDiff`                             |
+| `src/lib/dataset-file/schema.ts`                                 | Zod schemas for the actions, `snapshotColumns`                                            |
+| `src/lib/dataset-file/server.ts`                                 | Reads (files, schema versions) + service-role `purgeOldDatasetFiles`, `removeStoredFiles` |
+| `src/lib/dataset-file/upload.ts`                                 | `putFile` (XHR PUT with progress)                                                         |
+| `supabase/migrations/<ts>_dataset_files.sql`                     | Enums, bucket, tables, RLS, trigger, functions, backfill                                  |
+| `tests/db/dataset-files.test.ts`                                 | RLS + function tests against the cloud project                                            |
+| `src/app/w/[workspace]/catalog/dataset-file-actions.ts`          | Server actions: prepare, commit, download URL                                             |
+| `src/app/w/[workspace]/catalog/upload-dataset-file.ts`           | Client orchestration prepare → put → commit                                               |
+| `src/components/asset/dataset-file-picker.tsx`                   | Drop zone / file button, parse state, errors                                              |
+| `src/components/asset/upload-progress.tsx`                       | Accessible progress bar                                                                   |
+| `src/components/asset/schema-diff-list.tsx`                      | Renders a `SchemaDiff` (added / removed / type / meta)                                    |
+| `src/app/w/[workspace]/catalog/asset-form.tsx` (modify)          | New dataset from a file                                                                   |
+| `src/app/w/[workspace]/catalog/actions.ts` (modify)              | `createAsset` "created" state; `deleteAsset` removes stored files                         |
+| `src/app/w/[workspace]/catalog/[asset]/schema-review.tsx`        | Diff + editable description/PII of the proposed columns                                   |
+| `src/app/w/[workspace]/catalog/[asset]/upload-version.tsx`       | "Upload new version" dialog flow                                                          |
+| `src/app/w/[workspace]/catalog/[asset]/files-tab.tsx`            | Current file + previous versions                                                          |
+| `src/app/w/[workspace]/catalog/[asset]/download-file-button.tsx` | Signed-URL download                                                                       |
+| `src/app/w/[workspace]/catalog/[asset]/history-tab.tsx`          | Schema version timeline                                                                   |
+| `src/app/w/[workspace]/catalog/[asset]/page.tsx` (modify)        | Files + History tabs, upload on Columns tab                                               |
+| `tests/e2e/dataset-files.spec.ts`                                | End-to-end flow                                                                           |
 
 ---
 
 ### Task 1: Dependencies, limits and display helpers
 
 **Files:**
+
 - Modify: `package.json`, `pnpm-lock.yaml`
 - Create: `src/lib/dataset-file/limits.ts`, `src/lib/dataset-file/format.ts`
 - Test: `src/lib/dataset-file/limits.test.ts`, `src/lib/dataset-file/format.test.ts`
 
 **Interfaces:**
+
 - Produces: `DATASET_FILE_FORMATS`, `type DatasetFileFormat = "csv" | "parquet"`, `MAX_FILE_BYTES`, `KEEP_FILE_VERSIONS`, `DATASET_FILES_BUCKET = "dataset-files"`, `ACCEPT = ".csv,.parquet"`, `CONTENT_TYPES: Record<DatasetFileFormat, string>`, `formatFromFilename(name): DatasetFileFormat | null`, `fileStem(name): string`, `safeObjectName(name): string`, `storagePath(workspaceId, assetId, fileId, filename): string`, `checkFile({name,size}): {ok:true; format} | {ok:false; message}`, `filesToPurge<T extends {version:number; purgedAt:string|null}>(files: T[], keep?): T[]`; `formatBytes(bytes): string`, `summarizeFile({filename,sizeBytes,rowCount,columnCount}): string`, `formatTimestamp(iso): string`.
 
 - [ ] **Step 1: Install dependencies (check latest stable first)**
@@ -148,10 +150,15 @@ describe("storagePath", () => {
 
 describe("checkFile", () => {
   it("accepts a csv under the limit", () => {
-    expect(checkFile({ name: "a.csv", size: 10 })).toEqual({ ok: true, format: "csv" });
+    expect(checkFile({ name: "a.csv", size: 10 })).toEqual({
+      ok: true,
+      format: "csv",
+    });
   });
   it("accepts exactly the limit and rejects one byte more", () => {
-    expect(checkFile({ name: "a.parquet", size: MAX_FILE_BYTES }).ok).toBe(true);
+    expect(checkFile({ name: "a.parquet", size: MAX_FILE_BYTES }).ok).toBe(
+      true,
+    );
     expect(checkFile({ name: "a.parquet", size: MAX_FILE_BYTES + 1 })).toEqual({
       ok: false,
       message: "Files can be at most 50 MB.",
@@ -166,13 +173,18 @@ describe("checkFile", () => {
 });
 
 describe("filesToPurge", () => {
-  const file = (version: number, purgedAt: string | null = null) => ({ version, purgedAt });
+  const file = (version: number, purgedAt: string | null = null) => ({
+    version,
+    purgedAt,
+  });
   it("returns stored files beyond the newest `keep`", () => {
     const files = [1, 2, 3, 4].map((v) => file(v));
     expect(filesToPurge(files, 2).map((f) => f.version)).toEqual([2, 1]);
   });
   it("skips files already purged", () => {
-    expect(filesToPurge([file(1, "2026-01-01T00:00:00Z"), file(2), file(3)], 2)).toEqual([]);
+    expect(
+      filesToPurge([file(1, "2026-01-01T00:00:00Z"), file(2), file(3)], 2),
+    ).toEqual([]);
   });
   it("returns nothing when under the limit", () => {
     expect(filesToPurge([file(1)], 10)).toEqual([]);
@@ -198,22 +210,39 @@ describe("formatBytes", () => {
 describe("summarizeFile", () => {
   it("joins name, size, rows and columns", () => {
     expect(
-      summarizeFile({ filename: "orders.parquet", sizeBytes: 13_002_342, rowCount: 1_204_331, columnCount: 14 }),
+      summarizeFile({
+        filename: "orders.parquet",
+        sizeBytes: 13_002_342,
+        rowCount: 1_204_331,
+        columnCount: 14,
+      }),
     ).toBe("orders.parquet · 12.4 MB · 1,204,331 rows · 14 columns");
   });
   it("singularises and leaves out an unknown row count", () => {
-    expect(summarizeFile({ filename: "a.csv", sizeBytes: 10, rowCount: null, columnCount: 1 })).toBe(
-      "a.csv · 10 B · 1 column",
-    );
-    expect(summarizeFile({ filename: "a.csv", sizeBytes: 10, rowCount: 1, columnCount: 2 })).toBe(
-      "a.csv · 10 B · 1 row · 2 columns",
-    );
+    expect(
+      summarizeFile({
+        filename: "a.csv",
+        sizeBytes: 10,
+        rowCount: null,
+        columnCount: 1,
+      }),
+    ).toBe("a.csv · 10 B · 1 column");
+    expect(
+      summarizeFile({
+        filename: "a.csv",
+        sizeBytes: 10,
+        rowCount: 1,
+        columnCount: 2,
+      }),
+    ).toBe("a.csv · 10 B · 1 row · 2 columns");
   });
 });
 
 describe("formatTimestamp", () => {
   it("formats in UTC", () => {
-    expect(formatTimestamp("2026-09-29T14:05:00Z")).toBe("29 Sept 2026, 14:05 UTC");
+    expect(formatTimestamp("2026-09-29T14:05:00Z")).toBe(
+      "29 Sept 2026, 14:05 UTC",
+    );
   });
 });
 ```
@@ -283,8 +312,7 @@ export function storagePath(
 }
 
 export type FileCheck =
-  | { ok: true; format: DatasetFileFormat }
-  | { ok: false; message: string };
+  { ok: true; format: DatasetFileFormat } | { ok: false; message: string };
 
 export function checkFile(file: { name: string; size: number }): FileCheck {
   const format = formatFromFilename(file.name);
@@ -296,10 +324,9 @@ export function checkFile(file: { name: string; size: number }): FileCheck {
 }
 
 /** Stored (not yet purged) files beyond the newest `keep` versions. */
-export function filesToPurge<T extends { version: number; purgedAt: string | null }>(
-  files: T[],
-  keep: number = KEEP_FILE_VERSIONS,
-): T[] {
+export function filesToPurge<
+  T extends { version: number; purgedAt: string | null },
+>(files: T[], keep: number = KEEP_FILE_VERSIONS): T[] {
   return [...files]
     .sort((a, b) => b.version - a.version)
     .slice(keep)
@@ -307,7 +334,7 @@ export function filesToPurge<T extends { version: number; purgedAt: string | nul
 }
 ```
 
-Note: `safeObjectName("Ventas 2026 – ñ.csv")`: NFKD + strip accents gives `Ventas 2026 – n.csv`, the regex turns ` – ` into `_` → `Ventas_2026_n.csv`. If a test value disagrees, fix the implementation, not the test.
+Note: `safeObjectName("Ventas 2026 – ñ.csv")`: NFKD + strip accents gives `Ventas 2026 – n.csv`, the regex turns `–` into `_` → `Ventas_2026_n.csv`. If a test value disagrees, fix the implementation, not the test.
 
 - [ ] **Step 5: Implement `format.ts`**
 
@@ -381,10 +408,12 @@ git commit -m "feat(catalog): dataset file limits and display helpers (C11)"
 ### Task 2: Schema diff and carry-over
 
 **Files:**
+
 - Create: `src/lib/dataset-file/schema-diff.ts`
 - Test: `src/lib/dataset-file/schema-diff.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ColumnInput` from `@/lib/asset/schema` (`{ name: string; dataType: string; description: string; isPii: boolean }`).
 - Produces:
   - `type SchemaDiff = { added: ColumnInput[]; removed: ColumnInput[]; typeChanged: { name: string; before: string; after: string }[]; metaChanged: { name: string; changes: ("renamed" | "description" | "pii")[] }[]; unchanged: ColumnInput[] }`
@@ -400,9 +429,18 @@ import { describe, expect, it } from "vitest";
 
 import type { ColumnInput } from "@/lib/asset/schema";
 
-import { describeDiff, diffSchemas, hasChanges, mergeCarryOver } from "./schema-diff";
+import {
+  describeDiff,
+  diffSchemas,
+  hasChanges,
+  mergeCarryOver,
+} from "./schema-diff";
 
-const col = (name: string, dataType = "", extra: Partial<ColumnInput> = {}): ColumnInput => ({
+const col = (
+  name: string,
+  dataType = "",
+  extra: Partial<ColumnInput> = {},
+): ColumnInput => ({
   name,
   dataType,
   description: "",
@@ -418,16 +456,23 @@ describe("diffSchemas", () => {
     );
     expect(diff.added.map((c) => c.name)).toEqual(["email"]);
     expect(diff.removed.map((c) => c.name)).toEqual(["legacy"]);
-    expect(diff.typeChanged).toEqual([{ name: "amount", before: "INTEGER", after: "DOUBLE" }]);
+    expect(diff.typeChanged).toEqual([
+      { name: "amount", before: "INTEGER", after: "DOUBLE" },
+    ]);
     expect(diff.unchanged.map((c) => c.name)).toEqual(["id"]);
     expect(hasChanges(diff)).toBe(true);
   });
 
   it("matches names case-insensitively and reports a case-only rename", () => {
-    const diff = diffSchemas([col("Amount", "DOUBLE")], [col("amount", "DOUBLE")]);
+    const diff = diffSchemas(
+      [col("Amount", "DOUBLE")],
+      [col("amount", "DOUBLE")],
+    );
     expect(diff.added).toEqual([]);
     expect(diff.removed).toEqual([]);
-    expect(diff.metaChanged).toEqual([{ name: "amount", changes: ["renamed"] }]);
+    expect(diff.metaChanged).toEqual([
+      { name: "amount", changes: ["renamed"] },
+    ]);
   });
 
   it("reports description and PII changes", () => {
@@ -435,7 +480,9 @@ describe("diffSchemas", () => {
       [col("email", "STRING")],
       [col("email", "STRING", { description: "Contact", isPii: true })],
     );
-    expect(diff.metaChanged).toEqual([{ name: "email", changes: ["description", "pii"] }]);
+    expect(diff.metaChanged).toEqual([
+      { name: "email", changes: ["description", "pii"] },
+    ]);
     expect(diff.unchanged).toEqual([]);
   });
 
@@ -448,7 +495,10 @@ describe("diffSchemas", () => {
 describe("mergeCarryOver", () => {
   it("keeps descriptions and PII flags by name, takes names and types from the file", () => {
     const merged = mergeCarryOver(
-      [col("Email", "text", { description: "Contact", isPii: true }), col("legacy")],
+      [
+        col("Email", "text", { description: "Contact", isPii: true }),
+        col("legacy"),
+      ],
       [col("email", "STRING"), col("created_at", "TIMESTAMP")],
     );
     expect(merged).toEqual([
@@ -460,11 +510,18 @@ describe("mergeCarryOver", () => {
 
 describe("describeDiff", () => {
   it("summarises the first version by its column count", () => {
-    expect(describeDiff(diffSchemas([], [col("a"), col("b")]), true, 2)).toBe("Initial schema · 2 columns");
+    expect(describeDiff(diffSchemas([], [col("a"), col("b")]), true, 2)).toBe(
+      "Initial schema · 2 columns",
+    );
   });
   it("lists the kinds of change", () => {
-    const diff = diffSchemas([col("a", "INTEGER"), col("b")], [col("a", "DOUBLE"), col("c")]);
-    expect(describeDiff(diff, false, 2)).toBe("1 added · 1 removed · 1 type change");
+    const diff = diffSchemas(
+      [col("a", "INTEGER"), col("b")],
+      [col("a", "DOUBLE"), col("c")],
+    );
+    expect(describeDiff(diff, false, 2)).toBe(
+      "1 added · 1 removed · 1 type change",
+    );
   });
   it("says when only descriptions or flags changed", () => {
     const diff = diffSchemas([col("a")], [col("a", "", { isPii: true })]);
@@ -497,10 +554,19 @@ export type SchemaDiff = {
 const key = (name: string) => name.trim().toLowerCase();
 
 /** How `after` differs from `before`, in `after`'s order (removed in `before`'s). */
-export function diffSchemas(before: ColumnInput[], after: ColumnInput[]): SchemaDiff {
+export function diffSchemas(
+  before: ColumnInput[],
+  after: ColumnInput[],
+): SchemaDiff {
   const previous = new Map(before.map((column) => [key(column.name), column]));
   const next = new Set(after.map((column) => key(column.name)));
-  const diff: SchemaDiff = { added: [], removed: [], typeChanged: [], metaChanged: [], unchanged: [] };
+  const diff: SchemaDiff = {
+    added: [],
+    removed: [],
+    typeChanged: [],
+    metaChanged: [],
+    unchanged: [],
+  };
 
   for (const column of after) {
     const old = previous.get(key(column.name));
@@ -514,7 +580,11 @@ export function diffSchemas(before: ColumnInput[], after: ColumnInput[]): Schema
     if (old.isPii !== column.isPii) changes.push("pii");
     const retyped = old.dataType !== column.dataType;
     if (retyped) {
-      diff.typeChanged.push({ name: column.name, before: old.dataType, after: column.dataType });
+      diff.typeChanged.push({
+        name: column.name,
+        before: old.dataType,
+        after: column.dataType,
+      });
     }
     if (changes.length) diff.metaChanged.push({ name: column.name, changes });
     if (!retyped && !changes.length) diff.unchanged.push(column);
@@ -525,7 +595,10 @@ export function diffSchemas(before: ColumnInput[], after: ColumnInput[]): Schema
 
 export function hasChanges(diff: SchemaDiff): boolean {
   return Boolean(
-    diff.added.length || diff.removed.length || diff.typeChanged.length || diff.metaChanged.length,
+    diff.added.length ||
+    diff.removed.length ||
+    diff.typeChanged.length ||
+    diff.metaChanged.length,
   );
 }
 
@@ -533,7 +606,10 @@ export function hasChanges(diff: SchemaDiff): boolean {
  * The file's columns (names and types) with the descriptions and PII flags of
  * the current columns of the same name.
  */
-export function mergeCarryOver(current: ColumnInput[], parsed: ColumnInput[]): ColumnInput[] {
+export function mergeCarryOver(
+  current: ColumnInput[],
+  parsed: ColumnInput[],
+): ColumnInput[] {
   const byName = new Map(current.map((column) => [key(column.name), column]));
   return parsed.map((column) => {
     const old = byName.get(key(column.name));
@@ -546,15 +622,23 @@ export function mergeCarryOver(current: ColumnInput[], parsed: ColumnInput[]): C
   });
 }
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const plural = (n: number, one: string, many: string) =>
+  `${n} ${n === 1 ? one : many}`;
 
 /** One line for a schema version: `1 added · 1 removed · 1 type change`. */
-export function describeDiff(diff: SchemaDiff, isFirst: boolean, columnCount: number): string {
-  if (isFirst) return `Initial schema · ${plural(columnCount, "column", "columns")}`;
+export function describeDiff(
+  diff: SchemaDiff,
+  isFirst: boolean,
+  columnCount: number,
+): string {
+  if (isFirst)
+    return `Initial schema · ${plural(columnCount, "column", "columns")}`;
   const parts = [
     diff.added.length ? `${diff.added.length} added` : null,
     diff.removed.length ? `${diff.removed.length} removed` : null,
-    diff.typeChanged.length ? plural(diff.typeChanged.length, "type change", "type changes") : null,
+    diff.typeChanged.length
+      ? plural(diff.typeChanged.length, "type change", "type changes")
+      : null,
   ].filter(Boolean);
   if (parts.length) return parts.join(" · ");
   if (diff.metaChanged.length) {
@@ -581,10 +665,12 @@ git commit -m "feat(catalog): schema diff and column carry-over (C11)"
 ### Task 3: CSV schema inference
 
 **Files:**
+
 - Create: `src/lib/dataset-file/types.ts`, `src/lib/dataset-file/parse-csv.ts`
 - Test: `src/lib/dataset-file/parse-csv.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ColumnInput`, `MAX_COLUMNS`, `MAX_COLUMN_NAME` from `@/lib/asset/schema`.
 - Produces: `type ParsedSchema = { columns: ColumnInput[]; rowCount: number | null }`; `class DatasetFileError extends Error`; `validateColumnNames(names: string[]): void` (throws `DatasetFileError`); `createCsvSchemaBuilder(): { addRow(row: string[]): void; finish(): ParsedSchema }`; `parseCsvText(text: string): ParsedSchema`; `parseCsvFile(file: File, onProgress?: (fraction: number) => void): Promise<ParsedSchema>`.
 
@@ -597,14 +683,21 @@ import { parseCsvFile, parseCsvText } from "./parse-csv";
 import { DatasetFileError } from "./types";
 
 const types = (csv: string) =>
-  Object.fromEntries(parseCsvText(csv).columns.map((c) => [c.name, c.dataType]));
+  Object.fromEntries(
+    parseCsvText(csv).columns.map((c) => [c.name, c.dataType]),
+  );
 
 describe("parseCsvText", () => {
   it("reads the header and counts data rows", () => {
     const parsed = parseCsvText("id,name\n1,Ada\n2,Grace\n");
     expect(parsed.columns.map((c) => c.name)).toEqual(["id", "name"]);
     expect(parsed.rowCount).toBe(2);
-    expect(parsed.columns[0]).toEqual({ name: "id", dataType: "INTEGER", description: "", isPii: false });
+    expect(parsed.columns[0]).toEqual({
+      name: "id",
+      dataType: "INTEGER",
+      description: "",
+      isPii: false,
+    });
   });
 
   it("infers each type and falls back to STRING", () => {
@@ -616,11 +709,21 @@ describe("parseCsvText", () => {
           "FALSE,-20,3,2026-02-28,2026-01-01 10:00,y",
         ].join("\n"),
       ),
-    ).toEqual({ b: "BOOLEAN", i: "INTEGER", d: "DECIMAL", day: "DATE", ts: "TIMESTAMP", s: "STRING" });
+    ).toEqual({
+      b: "BOOLEAN",
+      i: "INTEGER",
+      d: "DECIMAL",
+      day: "DATE",
+      ts: "TIMESTAMP",
+      s: "STRING",
+    });
   });
 
   it("widens dates mixed with timestamps and integers mixed with decimals", () => {
-    expect(types("t,n\n2026-01-01,1\n2026-01-01T00:00:00,2.5\n")).toEqual({ t: "TIMESTAMP", n: "DECIMAL" });
+    expect(types("t,n\n2026-01-01,1\n2026-01-01T00:00:00,2.5\n")).toEqual({
+      t: "TIMESTAMP",
+      n: "DECIMAL",
+    });
   });
 
   it("ignores empty cells; an all-empty column is STRING", () => {
@@ -638,7 +741,7 @@ describe("parseCsvText", () => {
   });
 
   it("handles a BOM, semicolons and CRLF", () => {
-    const parsed = parseCsvText("﻿id;amount;note\r\n1;2.5;\"a;b\"\r\n");
+    const parsed = parseCsvText('﻿id;amount;note\r\n1;2.5;"a;b"\r\n');
     expect(parsed.columns.map((c) => [c.name, c.dataType])).toEqual([
       ["id", "INTEGER"],
       ["amount", "DECIMAL"],
@@ -647,32 +750,47 @@ describe("parseCsvText", () => {
   });
 
   it("trims header names", () => {
-    expect(parseCsvText(" id , name \n1,a\n").columns.map((c) => c.name)).toEqual(["id", "name"]);
+    expect(
+      parseCsvText(" id , name \n1,a\n").columns.map((c) => c.name),
+    ).toEqual(["id", "name"]);
   });
 
   it("rejects an empty file", () => {
-    expect(() => parseCsvText("")).toThrow(new DatasetFileError("The file is empty."));
+    expect(() => parseCsvText("")).toThrow(
+      new DatasetFileError("The file is empty."),
+    );
   });
 
   it("rejects blank and duplicate header names", () => {
-    expect(() => parseCsvText("id,,name\n")).toThrow("Column 2 has no name in the header row.");
-    expect(() => parseCsvText("id,ID\n")).toThrow("Duplicate column names: ID.");
+    expect(() => parseCsvText("id,,name\n")).toThrow(
+      "Column 2 has no name in the header row.",
+    );
+    expect(() => parseCsvText("id,ID\n")).toThrow(
+      "Duplicate column names: ID.",
+    );
   });
 });
 
 describe("parseCsvFile", () => {
   it("streams a File and reports progress", async () => {
     const progress: number[] = [];
-    const file = new File(["id,amount\n1,2.5\n"], "orders.csv", { type: "text/csv" });
+    const file = new File(["id,amount\n1,2.5\n"], "orders.csv", {
+      type: "text/csv",
+    });
     const parsed = await parseCsvFile(file, (p) => progress.push(p));
-    expect(parsed.columns.map((c) => c.dataType)).toEqual(["INTEGER", "DECIMAL"]);
+    expect(parsed.columns.map((c) => c.dataType)).toEqual([
+      "INTEGER",
+      "DECIMAL",
+    ]);
     expect(parsed.rowCount).toBe(1);
     expect(progress.at(-1)).toBe(1);
   });
 
   it("rejects with the header error", async () => {
     const file = new File(["a,a\n"], "bad.csv");
-    await expect(parseCsvFile(file)).rejects.toThrow("Duplicate column names: a.");
+    await expect(parseCsvFile(file)).rejects.toThrow(
+      "Duplicate column names: a.",
+    );
   });
 });
 ```
@@ -685,7 +803,11 @@ Expected: FAIL (module not found).
 - [ ] **Step 3: Implement `types.ts`**
 
 ```ts
-import { MAX_COLUMN_NAME, MAX_COLUMNS, type ColumnInput } from "@/lib/asset/schema";
+import {
+  MAX_COLUMN_NAME,
+  MAX_COLUMNS,
+  type ColumnInput,
+} from "@/lib/asset/schema";
 
 /** Columns (no descriptions, no PII flags) and the row count when known. */
 export type ParsedSchema = { columns: ColumnInput[]; rowCount: number | null };
@@ -698,15 +820,21 @@ export class DatasetFileError extends Error {
 /** Throws when names are blank, too long, duplicated (case-insensitive) or too many. */
 export function validateColumnNames(names: string[]): void {
   if (names.length > MAX_COLUMNS) {
-    throw new DatasetFileError(`The file has ${names.length} columns; the limit is ${MAX_COLUMNS}.`);
+    throw new DatasetFileError(
+      `The file has ${names.length} columns; the limit is ${MAX_COLUMNS}.`,
+    );
   }
   const blank = names.findIndex((name) => !name.trim());
   if (blank >= 0) {
-    throw new DatasetFileError(`Column ${blank + 1} has no name in the header row.`);
+    throw new DatasetFileError(
+      `Column ${blank + 1} has no name in the header row.`,
+    );
   }
   const long = names.find((name) => name.length > MAX_COLUMN_NAME);
   if (long) {
-    throw new DatasetFileError(`Column names can be at most ${MAX_COLUMN_NAME} characters.`);
+    throw new DatasetFileError(
+      `Column names can be at most ${MAX_COLUMN_NAME} characters.`,
+    );
   }
   const seen = new Set<string>();
   const duplicates = new Set<string>();
@@ -716,7 +844,9 @@ export function validateColumnNames(names: string[]): void {
     seen.add(key);
   }
   if (duplicates.size) {
-    throw new DatasetFileError(`Duplicate column names: ${[...duplicates].join(", ")}.`);
+    throw new DatasetFileError(
+      `Duplicate column names: ${[...duplicates].join(", ")}.`,
+    );
   }
 }
 ```
@@ -726,7 +856,11 @@ export function validateColumnNames(names: string[]): void {
 ```ts
 import Papa from "papaparse";
 
-import { DatasetFileError, validateColumnNames, type ParsedSchema } from "./types";
+import {
+  DatasetFileError,
+  validateColumnNames,
+  type ParsedSchema,
+} from "./types";
 
 // Candidate types, most specific first. A value removes every type it does
 // not match; a column gets the first type left (INTEGER ⊂ DECIMAL,
@@ -736,7 +870,10 @@ const TYPES = [
   ["INTEGER", /^[+-]?(0|[1-9]\d*)$/],
   ["DECIMAL", /^[+-]?((0|[1-9]\d*)(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/],
   ["DATE", /^\d{4}-\d{2}-\d{2}$/],
-  ["TIMESTAMP", /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/],
+  [
+    "TIMESTAMP",
+    /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/,
+  ],
 ] as const;
 const ALL_TYPES = (1 << TYPES.length) - 1;
 
@@ -756,7 +893,9 @@ export function createCsvSchemaBuilder() {
   return {
     addRow(row: string[]) {
       if (!header) {
-        header = row.map((cell, i) => (i === 0 ? cell.replace(/^﻿/, "") : cell).trim());
+        header = row.map((cell, i) =>
+          (i === 0 ? cell.replace(/^﻿/, "") : cell).trim(),
+        );
         validateColumnNames(header);
         masks = header.map(() => ALL_TYPES);
         hasValues = header.map(() => false);
@@ -819,7 +958,9 @@ export function parseCsvFile(
         try {
           for (const row of results.data) builder.addRow(row);
           chunks += 1;
-          onProgress?.(Math.min(0.99, (chunks * CHUNK_BYTES) / Math.max(file.size, 1)));
+          onProgress?.(
+            Math.min(0.99, (chunks * CHUNK_BYTES) / Math.max(file.size, 1)),
+          );
         } catch (error) {
           failed = true;
           parser.abort();
@@ -837,7 +978,9 @@ export function parseCsvFile(
         }
       },
       error(error) {
-        reject(new DatasetFileError(`Could not read the CSV: ${error.message}`));
+        reject(
+          new DatasetFileError(`Could not read the CSV: ${error.message}`),
+        );
       },
     });
   });
@@ -861,10 +1004,12 @@ git commit -m "feat(catalog): infer a dataset schema from CSV files (C11)"
 ### Task 4: Parquet schema reading and the parse entry point
 
 **Files:**
+
 - Create: `src/lib/dataset-file/parse-parquet.ts`, `src/lib/dataset-file/parse.ts`
 - Test: `src/lib/dataset-file/parse-parquet.test.ts`, `src/lib/dataset-file/parse.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ParsedSchema`, `DatasetFileError`, `validateColumnNames` (Task 3); `checkFile`, `DatasetFileFormat` (Task 1); `MAX_COLUMN_TYPE`.
 - Produces: `parquetTypeName(node: SchemaTree): string`; `parseParquetFile(file: Blob): Promise<ParsedSchema>`; `type ParsedDatasetFile = ParsedSchema & { file: File; format: DatasetFileFormat }`; `parseDatasetFile(file: File, onProgress?): Promise<{ ok: true; parsed: ParsedDatasetFile } | { ok: false; message: string }>`.
 
@@ -879,7 +1024,10 @@ import { describe, expect, it } from "vitest";
 
 import { parquetTypeName, parseParquetFile } from "./parse-parquet";
 
-const node = (element: SchemaElement, children: SchemaTree[] = []): SchemaTree => ({
+const node = (
+  element: SchemaElement,
+  children: SchemaTree[] = [],
+): SchemaTree => ({
   element,
   children,
   count: 1,
@@ -889,30 +1037,74 @@ const node = (element: SchemaElement, children: SchemaTree[] = []): SchemaTree =
 describe("parquetTypeName", () => {
   it("names primitives and logical types", () => {
     expect(parquetTypeName(node({ name: "a", type: "INT64" }))).toBe("INT64");
-    expect(parquetTypeName(node({ name: "a", type: "BYTE_ARRAY", logical_type: { type: "STRING" } }))).toBe("STRING");
-    expect(parquetTypeName(node({ name: "a", type: "BYTE_ARRAY", converted_type: "UTF8" }))).toBe("STRING");
-    expect(parquetTypeName(node({ name: "a", type: "BYTE_ARRAY" }))).toBe("BINARY");
     expect(
-      parquetTypeName(node({ name: "a", type: "INT64", logical_type: { type: "DECIMAL", precision: 10, scale: 2 } })),
+      parquetTypeName(
+        node({
+          name: "a",
+          type: "BYTE_ARRAY",
+          logical_type: { type: "STRING" },
+        }),
+      ),
+    ).toBe("STRING");
+    expect(
+      parquetTypeName(
+        node({ name: "a", type: "BYTE_ARRAY", converted_type: "UTF8" }),
+      ),
+    ).toBe("STRING");
+    expect(parquetTypeName(node({ name: "a", type: "BYTE_ARRAY" }))).toBe(
+      "BINARY",
+    );
+    expect(
+      parquetTypeName(
+        node({
+          name: "a",
+          type: "INT64",
+          logical_type: { type: "DECIMAL", precision: 10, scale: 2 },
+        }),
+      ),
     ).toBe("DECIMAL(10,2)");
     expect(
       parquetTypeName(
-        node({ name: "a", type: "INT64", logical_type: { type: "TIMESTAMP", unit: "MICROS", isAdjustedToUTC: true } }),
+        node({
+          name: "a",
+          type: "INT64",
+          logical_type: {
+            type: "TIMESTAMP",
+            unit: "MICROS",
+            isAdjustedToUTC: true,
+          },
+        }),
       ),
     ).toBe("TIMESTAMP(MICROS, UTC)");
-    expect(parquetTypeName(node({ name: "a", type: "INT64", converted_type: "TIMESTAMP_MILLIS" }))).toBe(
-      "TIMESTAMP(MILLIS)",
-    );
     expect(
-      parquetTypeName(node({ name: "a", type: "INT32", logical_type: { type: "INTEGER", bitWidth: 16, isSigned: false } })),
+      parquetTypeName(
+        node({ name: "a", type: "INT64", converted_type: "TIMESTAMP_MILLIS" }),
+      ),
+    ).toBe("TIMESTAMP(MILLIS)");
+    expect(
+      parquetTypeName(
+        node({
+          name: "a",
+          type: "INT32",
+          logical_type: { type: "INTEGER", bitWidth: 16, isSigned: false },
+        }),
+      ),
     ).toBe("UINT16");
-    expect(parquetTypeName(node({ name: "a", type: "FIXED_LEN_BYTE_ARRAY", type_length: 16 }))).toBe("FIXED(16)");
+    expect(
+      parquetTypeName(
+        node({ name: "a", type: "FIXED_LEN_BYTE_ARRAY", type_length: 16 }),
+      ),
+    ).toBe("FIXED(16)");
   });
 
   it("names lists, maps and structs", () => {
     const list = node({ name: "tags", logical_type: { type: "LIST" } }, [
       node({ name: "list", repetition_type: "REPEATED" }, [
-        node({ name: "element", type: "BYTE_ARRAY", logical_type: { type: "STRING" } }),
+        node({
+          name: "element",
+          type: "BYTE_ARRAY",
+          logical_type: { type: "STRING" },
+        }),
       ]),
     ]);
     expect(parquetTypeName(list)).toBe("LIST<STRING>");
@@ -926,18 +1118,28 @@ describe("parquetTypeName", () => {
     expect(parquetTypeName(map)).toBe("MAP<STRING, INT32>");
 
     const struct = node({ name: "address" }, [
-      node({ name: "city", type: "BYTE_ARRAY", logical_type: { type: "STRING" } }),
+      node({
+        name: "city",
+        type: "BYTE_ARRAY",
+        logical_type: { type: "STRING" },
+      }),
       node({ name: "zip", type: "INT32" }),
     ]);
     expect(parquetTypeName(struct)).toBe("STRUCT<city: STRING, zip: INT32>");
 
-    expect(parquetTypeName(node({ name: "legacy", type: "INT32", repetition_type: "REPEATED" }))).toBe("LIST<INT32>");
+    expect(
+      parquetTypeName(
+        node({ name: "legacy", type: "INT32", repetition_type: "REPEATED" }),
+      ),
+    ).toBe("LIST<INT32>");
   });
 
   it("clips type names to 100 characters", () => {
     const wide = node(
       { name: "wide" },
-      Array.from({ length: 20 }, (_, i) => node({ name: `field_${i}`, type: "INT64" })),
+      Array.from({ length: 20 }, (_, i) =>
+        node({ name: `field_${i}`, type: "INT64" }),
+      ),
     );
     const name = parquetTypeName(wide);
     expect(name).toHaveLength(100);
@@ -953,21 +1155,31 @@ describe("parseParquetFile", () => {
         { name: "customer", data: ["a", "b"], type: "STRING" },
         { name: "amount", data: [1.5, 2.25], type: "DOUBLE" },
         { name: "paid", data: [true, false], type: "BOOLEAN" },
-        { name: "ordered_at", data: [new Date(0), new Date(1000)], type: "TIMESTAMP" },
+        {
+          name: "ordered_at",
+          data: [new Date(0), new Date(1000)],
+          type: "TIMESTAMP",
+        },
       ],
     });
     const parsed = await parseParquetFile(new File([buffer], "orders.parquet"));
     expect(parsed.rowCount).toBe(2);
-    expect(parsed.columns.map((c) => c.name)).toEqual(["order_id", "customer", "amount", "paid", "ordered_at"]);
+    expect(parsed.columns.map((c) => c.name)).toEqual([
+      "order_id",
+      "customer",
+      "amount",
+      "paid",
+      "ordered_at",
+    ]);
     const types = parsed.columns.map((c) => c.dataType);
     expect(types.slice(0, 4)).toEqual(["INT64", "STRING", "DOUBLE", "BOOLEAN"]);
     expect(types[4]).toMatch(/^TIMESTAMP\(MILLIS/);
   });
 
   it("rejects a file that is not Parquet", async () => {
-    await expect(parseParquetFile(new File(["id,name\n"], "fake.parquet"))).rejects.toThrow(
-      "This is not a readable Parquet file.",
-    );
+    await expect(
+      parseParquetFile(new File(["id,name\n"], "fake.parquet")),
+    ).rejects.toThrow("This is not a readable Parquet file.");
   });
 });
 ```
@@ -983,7 +1195,10 @@ describe("parseDatasetFile", () => {
   it("parses a CSV and keeps the file and format", async () => {
     const file = new File(["id\n1\n"], "a.csv");
     const result = await parseDatasetFile(file);
-    expect(result).toMatchObject({ ok: true, parsed: { format: "csv", rowCount: 1, file } });
+    expect(result).toMatchObject({
+      ok: true,
+      parsed: { format: "csv", rowCount: 1, file },
+    });
   });
 
   it("returns the check message for other formats", async () => {
@@ -1019,7 +1234,11 @@ import {
 
 import { MAX_COLUMN_TYPE } from "@/lib/asset/schema";
 
-import { DatasetFileError, validateColumnNames, type ParsedSchema } from "./types";
+import {
+  DatasetFileError,
+  validateColumnNames,
+  type ParsedSchema,
+} from "./types";
 
 /** Reads only the byte ranges hyparquet asks for (the footer), not the file. */
 function blobBuffer(file: Blob): AsyncBuffer {
@@ -1050,7 +1269,8 @@ function describe(node: SchemaTree): string {
     const repeated = children[0];
     if (!repeated) return "LIST<UNKNOWN>";
     // 3-level lists wrap the element in a repeated group of one child.
-    const item = repeated.children.length === 1 ? repeated.children[0]! : repeated;
+    const item =
+      repeated.children.length === 1 ? repeated.children[0]! : repeated;
     return `LIST<${describe(item)}>`;
   }
   if (logical?.type === "MAP" || element.converted_type === "MAP") {
@@ -1076,8 +1296,10 @@ function describe(node: SchemaTree): string {
   }
 
   const converted = element.converted_type;
-  if (converted === "DECIMAL") return `DECIMAL(${element.precision ?? 0},${element.scale ?? 0})`;
-  if (converted && /^U?INT_\d+$/.test(converted)) return converted.replace("_", "");
+  if (converted === "DECIMAL")
+    return `DECIMAL(${element.precision ?? 0},${element.scale ?? 0})`;
+  if (converted && /^U?INT_\d+$/.test(converted))
+    return converted.replace("_", "");
   if (converted && CONVERTED[converted]) return CONVERTED[converted]!;
 
   switch (element.type) {
@@ -1093,7 +1315,9 @@ function describe(node: SchemaTree): string {
 }
 
 function clip(name: string): string {
-  return name.length > MAX_COLUMN_TYPE ? `${name.slice(0, MAX_COLUMN_TYPE - 1)}…` : name;
+  return name.length > MAX_COLUMN_TYPE
+    ? `${name.slice(0, MAX_COLUMN_TYPE - 1)}…`
+    : name;
 }
 
 /** A readable type: `INT64`, `DECIMAL(10,2)`, `LIST<STRING>`, `STRUCT<a: INT32>`. */
@@ -1134,11 +1358,13 @@ import { parseCsvFile } from "./parse-csv";
 import { parseParquetFile } from "./parse-parquet";
 import { DatasetFileError, type ParsedSchema } from "./types";
 
-export type ParsedDatasetFile = ParsedSchema & { file: File; format: DatasetFileFormat };
+export type ParsedDatasetFile = ParsedSchema & {
+  file: File;
+  format: DatasetFileFormat;
+};
 
 export type ParseResult =
-  | { ok: true; parsed: ParsedDatasetFile }
-  | { ok: false; message: string };
+  { ok: true; parsed: ParsedDatasetFile } | { ok: false; message: string };
 
 /** Checks and reads a file in the browser; never throws. */
 export async function parseDatasetFile(
@@ -1156,7 +1382,10 @@ export async function parseDatasetFile(
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof DatasetFileError ? error.message : "Could not read the file.",
+      message:
+        error instanceof DatasetFileError
+          ? error.message
+          : "Could not read the file.",
     };
   }
 }
@@ -1179,10 +1408,12 @@ git commit -m "feat(catalog): read dataset schemas from Parquet footers (C11)"
 ### Task 5: Migration — bucket, tables, RLS, schema snapshots, `add_dataset_file`
 
 **Files:**
+
 - Create: `supabase/migrations/<timestamp>_dataset_files.sql` (create with `pnpm supabase migration new dataset_files`)
 - Modify: `src/lib/db/types.ts` (regenerated)
 
 **Interfaces:**
+
 - Produces (SQL):
   - enums `public.dataset_file_format ('csv','parquet')`, `public.schema_change_source ('manual','file')`
   - tables `public.dataset_files`, `public.dataset_schema_versions` (columns per spec §2)
@@ -1672,9 +1903,11 @@ git commit -m "feat(db): dataset files, schema history and the dataset-files buc
 ### Task 6: RLS and function tests
 
 **Files:**
+
 - Create: `tests/db/dataset-files.test.ts`
 
 **Interfaces:**
+
 - Consumes: `inject("fixtures")`, `createFixtureUser`, `deleteFixtureUsers` (`tests/db/fixtures.ts`); `asUser`, `createAdminClient`, `expectDenied`, `expectRows`, `TypedClient` (`tests/db/helpers.ts`); RPCs from Task 5.
 
 - [ ] **Step 1: Write the tests**
@@ -1684,8 +1917,18 @@ import { randomUUID } from "node:crypto";
 
 import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
 
-import { createFixtureUser, deleteFixtureUsers, type FixtureUser } from "./fixtures";
-import { asUser, createAdminClient, expectDenied, expectRows, type TypedClient } from "./helpers";
+import {
+  createFixtureUser,
+  deleteFixtureUsers,
+  type FixtureUser,
+} from "./fixtures";
+import {
+  asUser,
+  createAdminClient,
+  expectDenied,
+  expectRows,
+  type TypedClient,
+} from "./helpers";
 
 const fx = inject("fixtures");
 const { acme, globex } = fx.workspaces;
@@ -1711,14 +1954,21 @@ const COLUMNS = [
   { name: "email", data_type: "text", description: "", is_pii: true },
 ];
 
-function objectPath(assetId: string, fileId: string, name = "orders.csv", workspace = acme) {
+function objectPath(
+  assetId: string,
+  fileId: string,
+  name = "orders.csv",
+  workspace = acme,
+) {
   return `${workspace}/${assetId}/${fileId}/${name}`;
 }
 
 async function upload(client: TypedClient, path: string, body = CSV) {
   const result = await client.storage
     .from(BUCKET)
-    .upload(path, new Blob([body], { type: "text/csv" }), { contentType: "text/csv" });
+    .upload(path, new Blob([body], { type: "text/csv" }), {
+      contentType: "text/csv",
+    });
   if (!result.error) stored.push(path);
   return result;
 }
@@ -1770,7 +2020,11 @@ beforeAll(async () => {
     .from("workspace_members")
     .insert({ workspace_id: acme, user_id: m.id, role: "member" as const });
   if (added.error) throw new Error(added.error.message);
-  [asM, v, b] = await Promise.all([asUser(m), asUser(fx.users.v), asUser(fx.users.b)]);
+  [asM, v, b] = await Promise.all([
+    asUser(m),
+    asUser(fx.users.v),
+    asUser(fx.users.b),
+  ]);
   datasetId = await newDataset("orders", COLUMNS);
 });
 
@@ -1783,19 +2037,29 @@ describe("schema history", () => {
   it("creating a dataset with columns records v1 as a manual change", async () => {
     const rows = await expectRows(history(asM, datasetId));
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ version: 1, source: "manual", file_id: null });
+    expect(rows[0]).toMatchObject({
+      version: 1,
+      source: "manual",
+      file_id: null,
+    });
     expect(rows[0]!.columns).toEqual(COLUMNS);
   });
 
   it("saving the same columns adds no version", async () => {
-    const { error } = await asM.rpc("set_dataset_columns", { asset: datasetId, columns: COLUMNS });
+    const { error } = await asM.rpc("set_dataset_columns", {
+      asset: datasetId,
+      columns: COLUMNS,
+    });
     expect(error).toBeNull();
     expect(await expectRows(history(asM, datasetId))).toHaveLength(1);
   });
 
   it("changing a column records the next version", async () => {
     const changed = [{ ...COLUMNS[0]!, data_type: "text" }, COLUMNS[1]!];
-    const { error } = await asM.rpc("set_dataset_columns", { asset: datasetId, columns: changed });
+    const { error } = await asM.rpc("set_dataset_columns", {
+      asset: datasetId,
+      columns: changed,
+    });
     expect(error).toBeNull();
     const rows = await expectRows(history(asM, datasetId));
     expect(rows.map((r) => r.version)).toEqual([1, 2]);
@@ -1822,8 +2086,20 @@ describe("schema history", () => {
 describe("dataset files", () => {
   it("records v1 with the size from Storage and a file snapshot", async () => {
     const id = await newDataset("from_file");
-    const columns = [{ name: "order_id", data_type: "INTEGER", description: "", is_pii: false }];
-    const { data, error } = await addFile(asM, id, columns, "Ventas 2026 – ñ.csv");
+    const columns = [
+      {
+        name: "order_id",
+        data_type: "INTEGER",
+        description: "",
+        is_pii: false,
+      },
+    ];
+    const { data, error } = await addFile(
+      asM,
+      id,
+      columns,
+      "Ventas 2026 – ñ.csv",
+    );
     expect(error).toBeNull();
     expect(data).toMatchObject({
       version: 1,
@@ -1833,12 +2109,16 @@ describe("dataset files", () => {
       uploaded_by: m.id,
     });
     const rows = await expectRows(history(asM, id));
-    expect(rows).toEqual([{ version: 1, source: "file", file_id: data!.id, columns }]);
+    expect(rows).toEqual([
+      { version: 1, source: "file", file_id: data!.id, columns },
+    ]);
   });
 
   it("uploading again increments the file version; an identical schema adds no snapshot", async () => {
     const id = await newDataset("twice");
-    const columns = [{ name: "a", data_type: "INTEGER", description: "", is_pii: false }];
+    const columns = [
+      { name: "a", data_type: "INTEGER", description: "", is_pii: false },
+    ];
     await addFile(asM, id, columns);
     const second = await addFile(asM, id, columns);
     expect(second.error).toBeNull();
@@ -1901,7 +2181,10 @@ describe("access", () => {
 
   it("another workspace sees nothing and cannot upload", async () => {
     const { data } = await addFile(asM, datasetId, COLUMNS);
-    const files = await b.from("dataset_files").select("id").eq("asset_id", datasetId);
+    const files = await b
+      .from("dataset_files")
+      .select("id")
+      .eq("asset_id", datasetId);
     expect(files.data).toEqual([]);
     const versions = await history(b, datasetId);
     expect(versions.data).toEqual([]);
@@ -1912,20 +2195,39 @@ describe("access", () => {
   });
 
   it("an object path must name the dataset's own workspace", async () => {
-    const uploaded = await upload(asM, objectPath(datasetId, randomUUID(), "x.csv", globex));
+    const uploaded = await upload(
+      asM,
+      objectPath(datasetId, randomUUID(), "x.csv", globex),
+    );
     expect(uploaded.error).not.toBeNull();
   });
 
   it("history and files are append-only for users", async () => {
     const { data } = await addFile(asM, datasetId, COLUMNS);
     await expectDenied(
-      asM.from("dataset_schema_versions").update({ columns: [] }).eq("asset_id", datasetId).select(),
+      asM
+        .from("dataset_schema_versions")
+        .update({ columns: [] })
+        .eq("asset_id", datasetId)
+        .select(),
     );
-    await expectDenied(asM.from("dataset_schema_versions").delete().eq("asset_id", datasetId).select());
     await expectDenied(
-      asM.from("dataset_files").update({ purged_at: new Date().toISOString() }).eq("id", data!.id).select(),
+      asM
+        .from("dataset_schema_versions")
+        .delete()
+        .eq("asset_id", datasetId)
+        .select(),
     );
-    await expectDenied(asM.from("dataset_files").delete().eq("id", data!.id).select());
+    await expectDenied(
+      asM
+        .from("dataset_files")
+        .update({ purged_at: new Date().toISOString() })
+        .eq("id", data!.id)
+        .select(),
+    );
+    await expectDenied(
+      asM.from("dataset_files").delete().eq("id", data!.id).select(),
+    );
   });
 
   it("stored objects cannot be overwritten or deleted by users", async () => {
@@ -1967,11 +2269,13 @@ git commit -m "test(db): RLS and history tests for dataset files (C11)"
 ### Task 7: Server reads, retention, server actions and delete cleanup
 
 **Files:**
+
 - Create: `src/lib/dataset-file/schema.ts`, `src/lib/dataset-file/server.ts`, `src/app/w/[workspace]/catalog/dataset-file-actions.ts`
 - Modify: `src/app/w/[workspace]/catalog/actions.ts` (`deleteAsset`)
 - Test: `src/lib/dataset-file/schema.test.ts`
 
 **Interfaces:**
+
 - Consumes: `columnsSchema`, `columnsPayload`, `ColumnInput` (`@/lib/asset/schema`); `requireUser` (`@/lib/profile/server`); `createServiceClient` (`@/lib/supabase/service`); Task 1 constants and `filesToPurge`; `ActionResult` (`catalog/actions.ts`).
 - Produces:
   - `prepareUploadSchema`, `commitUploadSchema`, `fileRefSchema`, `snapshotColumns(value: unknown): ColumnInput[]`
@@ -1986,21 +2290,41 @@ git commit -m "test(db): RLS and history tests for dataset files (C11)"
 ```ts
 import { describe, expect, it } from "vitest";
 
-import { commitUploadSchema, prepareUploadSchema, snapshotColumns } from "./schema";
+import {
+  commitUploadSchema,
+  prepareUploadSchema,
+  snapshotColumns,
+} from "./schema";
 
 const id = "3f1c8a5e-6b1d-4c3a-9e2f-1a2b3c4d5e6f";
 
 describe("prepareUploadSchema", () => {
   it("accepts a valid request", () => {
     expect(
-      prepareUploadSchema.safeParse({ assetId: id, filename: "a.csv", format: "csv", sizeBytes: 10 }).success,
+      prepareUploadSchema.safeParse({
+        assetId: id,
+        filename: "a.csv",
+        format: "csv",
+        sizeBytes: 10,
+      }).success,
     ).toBe(true);
   });
   it("rejects too-large files, slashes in names and unknown formats", () => {
-    const base = { assetId: id, filename: "a.csv", format: "csv", sizeBytes: 10 };
-    expect(prepareUploadSchema.safeParse({ ...base, sizeBytes: 52428801 }).success).toBe(false);
-    expect(prepareUploadSchema.safeParse({ ...base, filename: "a/b.csv" }).success).toBe(false);
-    expect(prepareUploadSchema.safeParse({ ...base, format: "json" }).success).toBe(false);
+    const base = {
+      assetId: id,
+      filename: "a.csv",
+      format: "csv",
+      sizeBytes: 10,
+    };
+    expect(
+      prepareUploadSchema.safeParse({ ...base, sizeBytes: 52428801 }).success,
+    ).toBe(false);
+    expect(
+      prepareUploadSchema.safeParse({ ...base, filename: "a/b.csv" }).success,
+    ).toBe(false);
+    expect(
+      prepareUploadSchema.safeParse({ ...base, format: "json" }).success,
+    ).toBe(false);
   });
 });
 
@@ -2024,9 +2348,11 @@ describe("commitUploadSchema", () => {
 
 describe("snapshotColumns", () => {
   it("maps a stored snapshot to column inputs", () => {
-    expect(snapshotColumns([{ name: "a", data_type: "INT64", description: "", is_pii: true }])).toEqual([
-      { name: "a", dataType: "INT64", description: "", isPii: true },
-    ]);
+    expect(
+      snapshotColumns([
+        { name: "a", data_type: "INT64", description: "", is_pii: true },
+      ]),
+    ).toEqual([{ name: "a", dataType: "INT64", description: "", isPii: true }]);
   });
   it("returns no columns for malformed data", () => {
     expect(snapshotColumns({ nope: true })).toEqual([]);
@@ -2053,7 +2379,9 @@ const filenameSchema = z
   .trim()
   .min(1)
   .max(255)
-  .refine((name) => !name.includes("/"), { error: "File names cannot contain /." });
+  .refine((name) => !name.includes("/"), {
+    error: "File names cannot contain /.",
+  });
 
 export const prepareUploadSchema = z.object({
   assetId: z.uuid(),
@@ -2107,7 +2435,11 @@ import type { ColumnInput } from "@/lib/asset/schema";
 import { requireUser } from "@/lib/profile/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
-import { DATASET_FILES_BUCKET, filesToPurge, type DatasetFileFormat } from "./limits";
+import {
+  DATASET_FILES_BUCKET,
+  filesToPurge,
+  type DatasetFileFormat,
+} from "./limits";
 import { snapshotColumns } from "./schema";
 
 type Person = { name: string | null; handle: string | null } | null;
@@ -2134,11 +2466,14 @@ export type SchemaVersion = {
   file: { filename: string; version: number } | null;
 };
 
-const person = (p: { display_name: string | null; handle: string | null } | null): Person =>
-  p ? { name: p.display_name, handle: p.handle } : null;
+const person = (
+  p: { display_name: string | null; handle: string | null } | null,
+): Person => (p ? { name: p.display_name, handle: p.handle } : null);
 
 /** A dataset's file versions, newest first. */
-export async function listDatasetFiles(assetId: string): Promise<DatasetFile[]> {
+export async function listDatasetFiles(
+  assetId: string,
+): Promise<DatasetFile[]> {
   const { supabase } = await requireUser();
   const { data, error } = await supabase
     .from("dataset_files")
@@ -2162,7 +2497,9 @@ export async function listDatasetFiles(assetId: string): Promise<DatasetFile[]> 
 }
 
 /** A dataset's schema versions, newest first. */
-export async function listSchemaVersions(assetId: string): Promise<SchemaVersion[]> {
+export async function listSchemaVersions(
+  assetId: string,
+): Promise<SchemaVersion[]> {
   const { supabase } = await requireUser();
   const { data, error } = await supabase
     .from("dataset_schema_versions")
@@ -2186,7 +2523,10 @@ export async function listSchemaVersions(assetId: string): Promise<SchemaVersion
 // Service role below: every call is scoped by `workspaceId`.
 
 /** Deletes stored objects beyond the newest versions. Logs, never throws. */
-export async function purgeOldDatasetFiles(workspaceId: string, assetId: string): Promise<void> {
+export async function purgeOldDatasetFiles(
+  workspaceId: string,
+  assetId: string,
+): Promise<void> {
   const service = createServiceClient();
   const { data, error } = await service
     .from("dataset_files")
@@ -2197,7 +2537,9 @@ export async function purgeOldDatasetFiles(workspaceId: string, assetId: string)
     console.error("dataset file retention: list failed", error);
     return;
   }
-  const stale = filesToPurge(data.map((f) => ({ ...f, purgedAt: f.purged_at })));
+  const stale = filesToPurge(
+    data.map((f) => ({ ...f, purgedAt: f.purged_at })),
+  );
   if (!stale.length) return;
   const removed = await service.storage
     .from(DATASET_FILES_BUCKET)
@@ -2214,14 +2556,20 @@ export async function purgeOldDatasetFiles(workspaceId: string, assetId: string)
       "id",
       stale.map((f) => f.id),
     );
-  if (marked.error) console.error("dataset file retention: mark failed", marked.error);
+  if (marked.error)
+    console.error("dataset file retention: mark failed", marked.error);
 }
 
 /** Removes stored objects of a workspace (paths outside it are ignored). */
-export async function removeStoredFiles(workspaceId: string, paths: string[]): Promise<void> {
+export async function removeStoredFiles(
+  workspaceId: string,
+  paths: string[],
+): Promise<void> {
   const scoped = paths.filter((path) => path.startsWith(`${workspaceId}/`));
   if (!scoped.length) return;
-  const { error } = await createServiceClient().storage.from(DATASET_FILES_BUCKET).remove(scoped);
+  const { error } = await createServiceClient()
+    .storage.from(DATASET_FILES_BUCKET)
+    .remove(scoped);
   if (error) console.error("dataset file cleanup failed", error);
 }
 ```
@@ -2240,15 +2588,24 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { columnsPayload } from "@/lib/asset/schema";
-import { CONTENT_TYPES, DATASET_FILES_BUCKET, storagePath } from "@/lib/dataset-file/limits";
-import { commitUploadSchema, fileRefSchema, prepareUploadSchema } from "@/lib/dataset-file/schema";
+import {
+  CONTENT_TYPES,
+  DATASET_FILES_BUCKET,
+  storagePath,
+} from "@/lib/dataset-file/limits";
+import {
+  commitUploadSchema,
+  fileRefSchema,
+  prepareUploadSchema,
+} from "@/lib/dataset-file/schema";
 import { purgeOldDatasetFiles } from "@/lib/dataset-file/server";
 import { requireUser } from "@/lib/profile/server";
 
 import type { ActionResult } from "./actions";
 
 const GENERIC_ERROR = "Something went wrong. Try again.";
-const NOT_ALLOWED = "You do not have permission to upload files to this dataset.";
+const NOT_ALLOWED =
+  "You do not have permission to upload files to this dataset.";
 const DOWNLOAD_TTL_SECONDS = 60;
 
 export type PreparedUpload = {
@@ -2261,10 +2618,15 @@ export type PreparedUpload = {
 /** A signed URL the browser uploads the file to (Storage RLS applies). */
 export async function prepareDatasetFileUpload(
   raw: unknown,
-): Promise<{ ok: true; upload: PreparedUpload } | { ok: false; message: string }> {
+): Promise<
+  { ok: true; upload: PreparedUpload } | { ok: false; message: string }
+> {
   const input = prepareUploadSchema.safeParse(raw);
   if (!input.success) {
-    return { ok: false, message: input.error.issues[0]?.message ?? GENERIC_ERROR };
+    return {
+      ok: false,
+      message: input.error.issues[0]?.message ?? GENERIC_ERROR,
+    };
   }
   const { supabase } = await requireUser();
   const { data: asset } = await supabase
@@ -2272,17 +2634,28 @@ export async function prepareDatasetFileUpload(
     .select("workspace_id, kind")
     .eq("id", input.data.assetId)
     .maybeSingle();
-  if (!asset || asset.kind !== "dataset") return { ok: false, message: NOT_ALLOWED };
+  if (!asset || asset.kind !== "dataset")
+    return { ok: false, message: NOT_ALLOWED };
 
   const fileId = randomUUID();
-  const path = storagePath(asset.workspace_id, input.data.assetId, fileId, input.data.filename);
+  const path = storagePath(
+    asset.workspace_id,
+    input.data.assetId,
+    fileId,
+    input.data.filename,
+  );
   const { data, error } = await supabase.storage
     .from(DATASET_FILES_BUCKET)
     .createSignedUploadUrl(path);
   if (error || !data) return { ok: false, message: NOT_ALLOWED };
   return {
     ok: true,
-    upload: { fileId, path, signedUrl: data.signedUrl, contentType: CONTENT_TYPES[input.data.format] },
+    upload: {
+      fileId,
+      path,
+      signedUrl: data.signedUrl,
+      contentType: CONTENT_TYPES[input.data.format],
+    },
   };
 }
 
@@ -2290,7 +2663,10 @@ export async function prepareDatasetFileUpload(
 export async function commitDatasetFile(raw: unknown): Promise<ActionResult> {
   const input = commitUploadSchema.safeParse(raw);
   if (!input.success) {
-    return { ok: false, message: input.error.issues[0]?.message ?? GENERIC_ERROR };
+    return {
+      ok: false,
+      message: input.error.issues[0]?.message ?? GENERIC_ERROR,
+    };
   }
   const { supabase } = await requireUser();
   const { data, error } = await supabase.rpc("add_dataset_file", {
@@ -2333,8 +2709,11 @@ export async function getDatasetFileDownloadUrl(
   }
   const signed = await supabase.storage
     .from(DATASET_FILES_BUCKET)
-    .createSignedUrl(data.storage_path, DOWNLOAD_TTL_SECONDS, { download: data.filename });
-  if (signed.error || !signed.data) return { ok: false, message: GENERIC_ERROR };
+    .createSignedUrl(data.storage_path, DOWNLOAD_TTL_SECONDS, {
+      download: data.filename,
+    });
+  if (signed.error || !signed.data)
+    return { ok: false, message: GENERIC_ERROR };
   return { ok: true, url: signed.data.signedUrl };
 }
 ```
@@ -2348,31 +2727,31 @@ import { removeStoredFiles } from "@/lib/dataset-file/server";
 ```
 
 ```ts
-  const { supabase } = await requireUser();
-  // Read the stored files first: their rows cascade with the asset.
-  const files = await supabase
-    .from("dataset_files")
-    .select("workspace_id, storage_path")
-    .eq("asset_id", input.data.assetId);
-  const { data, error } = await supabase
-    .from("entities")
-    .delete()
-    .eq("id", input.data.assetId)
-    .eq("type", "asset")
-    .select("id");
-  if (error || data.length === 0) {
-    return {
-      ok: false,
-      message: "Only the asset's owner or a workspace admin can delete it.",
-    };
-  }
-  const stored = files.data ?? [];
-  if (stored.length) {
-    await removeStoredFiles(
-      stored[0]!.workspace_id,
-      stored.map((f) => f.storage_path),
-    );
-  }
+const { supabase } = await requireUser();
+// Read the stored files first: their rows cascade with the asset.
+const files = await supabase
+  .from("dataset_files")
+  .select("workspace_id, storage_path")
+  .eq("asset_id", input.data.assetId);
+const { data, error } = await supabase
+  .from("entities")
+  .delete()
+  .eq("id", input.data.assetId)
+  .eq("type", "asset")
+  .select("id");
+if (error || data.length === 0) {
+  return {
+    ok: false,
+    message: "Only the asset's owner or a workspace admin can delete it.",
+  };
+}
+const stored = files.data ?? [];
+if (stored.length) {
+  await removeStoredFiles(
+    stored[0]!.workspace_id,
+    stored.map((f) => f.storage_path),
+  );
+}
 ```
 
 - [ ] **Step 7: Run unit tests and typecheck**
@@ -2392,10 +2771,12 @@ git commit -m "feat(catalog): server actions for dataset file uploads, downloads
 ### Task 8: Upload client, file picker and progress bar
 
 **Files:**
+
 - Create: `src/lib/dataset-file/upload.ts`, `src/app/w/[workspace]/catalog/upload-dataset-file.ts`, `src/components/asset/dataset-file-picker.tsx`, `src/components/asset/upload-progress.tsx`
 - Test: `src/components/asset/dataset-file-picker.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `parseDatasetFile`, `ParsedDatasetFile` (Task 4); `ACCEPT` (Task 1); server actions (Task 7).
 - Produces: `putFile(url, file: Blob, contentType, onProgress?): Promise<void>`; `uploadDatasetFile({ assetId, parsed, columns, onProgress? }): Promise<ActionResult>`; `<DatasetFilePicker onParsed(parsed) label? disabled? />`; `<UploadProgress value={0..1} label />`.
 
@@ -2412,7 +2793,9 @@ describe("DatasetFilePicker", () => {
     const onParsed = vi.fn();
     render(<DatasetFilePicker onParsed={onParsed} />);
     const input = screen.getByLabelText("Choose a CSV or Parquet file");
-    const file = new File(["id,amount\n1,2.5\n"], "orders.csv", { type: "text/csv" });
+    const file = new File(["id,amount\n1,2.5\n"], "orders.csv", {
+      type: "text/csv",
+    });
     fireEvent.change(input, { target: { files: [file] } });
     await waitFor(() => expect(onParsed).toHaveBeenCalledTimes(1));
     expect(onParsed.mock.calls[0]![0]).toMatchObject({
@@ -2431,7 +2814,9 @@ describe("DatasetFilePicker", () => {
     fireEvent.change(screen.getByLabelText("Choose a CSV or Parquet file"), {
       target: { files: [new File(["x"], "notes.txt")] },
     });
-    expect(await screen.findByRole("alert")).toHaveTextContent("Choose a .csv or .parquet file.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Choose a .csv or .parquet file.",
+    );
     expect(onParsed).not.toHaveBeenCalled();
   });
 });
@@ -2471,7 +2856,10 @@ export function putFile(
         reject(new Error(`The upload failed (${xhr.status}). Try again.`));
       }
     };
-    xhr.onerror = () => reject(new Error("The upload failed. Check your connection and try again."));
+    xhr.onerror = () =>
+      reject(
+        new Error("The upload failed. Check your connection and try again."),
+      );
     xhr.send(file);
   });
 }
@@ -2485,7 +2873,10 @@ import type { ParsedDatasetFile } from "@/lib/dataset-file/parse";
 import { putFile } from "@/lib/dataset-file/upload";
 
 import type { ActionResult } from "./actions";
-import { commitDatasetFile, prepareDatasetFileUpload } from "./dataset-file-actions";
+import {
+  commitDatasetFile,
+  prepareDatasetFileUpload,
+} from "./dataset-file-actions";
 
 /** Prepare → upload straight to Storage → record the version with `columns`. */
 export async function uploadDatasetFile({
@@ -2507,9 +2898,17 @@ export async function uploadDatasetFile({
   });
   if (!prepared.ok) return prepared;
   try {
-    await putFile(prepared.upload.signedUrl, parsed.file, prepared.upload.contentType, onProgress);
+    await putFile(
+      prepared.upload.signedUrl,
+      parsed.file,
+      prepared.upload.contentType,
+      onProgress,
+    );
   } catch (error) {
-    return { ok: false, message: error instanceof Error ? error.message : "The upload failed." };
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "The upload failed.",
+    };
   }
   return commitDatasetFile({
     assetId,
@@ -2527,7 +2926,13 @@ export async function uploadDatasetFile({
 
 ```tsx
 /** A determinate progress bar with a visible label. */
-export function UploadProgress({ value, label }: { value: number; label: string }) {
+export function UploadProgress({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) {
   const percent = Math.round(Math.min(1, Math.max(0, value)) * 100);
   return (
     <div className="flex flex-col gap-1.5" role="status">
@@ -2542,7 +2947,10 @@ export function UploadProgress({ value, label }: { value: number; label: string 
         aria-valuenow={percent}
         className="h-2 overflow-hidden rounded-full bg-muted"
       >
-        <div className="h-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
+        <div
+          className="h-full bg-primary transition-[width]"
+          style={{ width: `${percent}%` }}
+        />
       </div>
     </div>
   );
@@ -2560,7 +2968,10 @@ import { useId, useState } from "react";
 import { UploadProgress } from "@/components/asset/upload-progress";
 import { Button } from "@/components/ui/button";
 import { ACCEPT } from "@/lib/dataset-file/limits";
-import { parseDatasetFile, type ParsedDatasetFile } from "@/lib/dataset-file/parse";
+import {
+  parseDatasetFile,
+  type ParsedDatasetFile,
+} from "@/lib/dataset-file/parse";
 import { cn } from "@/lib/utils";
 
 type Status =
@@ -2671,9 +3082,11 @@ git commit -m "feat(catalog): dataset file picker and direct-to-storage upload (
 ### Task 9: New dataset from a file
 
 **Files:**
+
 - Modify: `src/app/w/[workspace]/catalog/actions.ts` (`createAsset`), `src/app/w/[workspace]/catalog/asset-form.tsx`
 
 **Interfaces:**
+
 - Consumes: `DatasetFilePicker`, `UploadProgress` (Task 8); `uploadDatasetFile` (Task 8); `fileStem` (Task 1); `summarizeFile` (Task 1); `suggestQualifiedName`, `columnsSchema` (`@/lib/asset/schema`).
 - Produces: `export type CreateAssetState = FormState | { status: "created"; assetId: string; href: string }`; `createAsset(previous: CreateAssetState, formData): Promise<CreateAssetState>` — when the form carries `withFile=1` and kind is `dataset`, it creates the dataset **without columns** and returns `created` instead of redirecting.
 
@@ -2684,8 +3097,7 @@ In `actions.ts`:
 ```ts
 /** `created`: a dataset whose file the browser uploads next (no redirect yet). */
 export type CreateAssetState =
-  | FormState
-  | { status: "created"; assetId: string; href: string };
+  FormState | { status: "created"; assetId: string; href: string };
 ```
 
 ```ts
@@ -2740,59 +3152,59 @@ import { uploadDatasetFile } from "./upload-dataset-file";
 Replace the `useActionState` block and add the file state:
 
 ```tsx
-  const router = useRouter();
-  const submittedColumns = useRef<ColumnInput[]>([]);
-  const uploadStarted = useRef<string | null>(null);
-  const [file, setFile] = useState<ParsedDatasetFile | null>(null);
-  const [columnsKey, setColumnsKey] = useState(0);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+const router = useRouter();
+const submittedColumns = useRef<ColumnInput[]>([]);
+const uploadStarted = useRef<string | null>(null);
+const [file, setFile] = useState<ParsedDatasetFile | null>(null);
+const [columnsKey, setColumnsKey] = useState(0);
+const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const [state, action] = useActionState(
-    async (previous: CreateAssetState, formData: FormData) => {
-      if (editing) return updateAsset({ status: "idle" }, formData);
-      const raw = formData.get("columns");
-      const parsed = columnsSchema.safeParse(
-        typeof raw === "string" && raw ? JSON.parse(raw) : [],
-      );
-      submittedColumns.current = parsed.success ? parsed.data : [];
-      return createAsset(previous, formData);
-    },
-    idle as CreateAssetState,
-  );
+const [state, action] = useActionState(
+  async (previous: CreateAssetState, formData: FormData) => {
+    if (editing) return updateAsset({ status: "idle" }, formData);
+    const raw = formData.get("columns");
+    const parsed = columnsSchema.safeParse(
+      typeof raw === "string" && raw ? JSON.parse(raw) : [],
+    );
+    submittedColumns.current = parsed.success ? parsed.data : [];
+    return createAsset(previous, formData);
+  },
+  idle as CreateAssetState,
+);
 
-  // A dataset created from a file: upload it, then open the dataset.
-  useEffect(() => {
-    if (state.status !== "created" || !file) return;
-    if (uploadStarted.current === state.assetId) return;
-    uploadStarted.current = state.assetId;
-    setUploadProgress(0);
-    void uploadDatasetFile({
-      assetId: state.assetId,
-      parsed: file,
-      columns: submittedColumns.current,
-      onProgress: setUploadProgress,
-    }).then((result) => {
-      if (result.ok) {
-        router.push(state.href);
-        return;
-      }
-      toast.error(
-        `The dataset was added, but the file did not upload: ${result.message} Upload it again from the Files tab.`,
-      );
-      router.push(`${state.href}?tab=files`);
-    });
-  }, [state, file, router]);
-
-  function attach(parsed: ParsedDatasetFile) {
-    const stem = fileStem(parsed.file.name);
-    setFile(parsed);
-    setColumnsKey((k) => k + 1);
-    if (!name.trim()) setName(stem);
-    if (!qualifiedNameEdited) {
-      const table = suggestQualifiedName(stem).replaceAll(".", "_") || "dataset";
-      setQualifiedName(`files.${table}`);
+// A dataset created from a file: upload it, then open the dataset.
+useEffect(() => {
+  if (state.status !== "created" || !file) return;
+  if (uploadStarted.current === state.assetId) return;
+  uploadStarted.current = state.assetId;
+  setUploadProgress(0);
+  void uploadDatasetFile({
+    assetId: state.assetId,
+    parsed: file,
+    columns: submittedColumns.current,
+    onProgress: setUploadProgress,
+  }).then((result) => {
+    if (result.ok) {
+      router.push(state.href);
+      return;
     }
+    toast.error(
+      `The dataset was added, but the file did not upload: ${result.message} Upload it again from the Files tab.`,
+    );
+    router.push(`${state.href}?tab=files`);
+  });
+}, [state, file, router]);
+
+function attach(parsed: ParsedDatasetFile) {
+  const stem = fileStem(parsed.file.name);
+  setFile(parsed);
+  setColumnsKey((k) => k + 1);
+  if (!name.trim()) setName(stem);
+  if (!qualifiedNameEdited) {
+    const table = suggestQualifiedName(stem).replaceAll(".", "_") || "dataset";
+    setQualifiedName(`files.${table}`);
   }
+}
 ```
 
 `JSON.parse` can throw on a malformed hidden input; wrap it: `(() => { try { return JSON.parse(raw) } catch { return [] } })()`.
@@ -2800,60 +3212,73 @@ Replace the `useActionState` block and add the file state:
 Render — right after the kind `fieldset` (inside `{!editing && …}` region, only for datasets):
 
 ```tsx
-      {!editing && kind === "dataset" && (
-        <section aria-labelledby="asset-file-heading" className="flex flex-col gap-2">
-          <h2 id="asset-file-heading" className="text-sm font-medium">
-            Start from a file <span className="font-normal text-muted-foreground">(optional)</span>
-          </h2>
-          {file ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
-              <p className="text-sm">
-                {summarizeFile({
-                  filename: file.file.name,
-                  sizeBytes: file.file.size,
-                  rowCount: file.rowCount,
-                  columnCount: file.columns.length,
-                })}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={uploadProgress !== null}
-                onClick={() => {
-                  setFile(null);
-                  setColumnsKey((k) => k + 1);
-                }}
-              >
-                Remove file
-              </Button>
-            </div>
-          ) : (
-            <DatasetFilePicker onParsed={attach} />
-          )}
-          {file && <input type="hidden" name="withFile" value="1" />}
-        </section>
+{
+  !editing && kind === "dataset" && (
+    <section
+      aria-labelledby="asset-file-heading"
+      className="flex flex-col gap-2"
+    >
+      <h2 id="asset-file-heading" className="text-sm font-medium">
+        Start from a file{" "}
+        <span className="font-normal text-muted-foreground">(optional)</span>
+      </h2>
+      {file ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
+          <p className="text-sm">
+            {summarizeFile({
+              filename: file.file.name,
+              sizeBytes: file.file.size,
+              rowCount: file.rowCount,
+              columnCount: file.columns.length,
+            })}
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={uploadProgress !== null}
+            onClick={() => {
+              setFile(null);
+              setColumnsKey((k) => k + 1);
+            }}
+          >
+            Remove file
+          </Button>
+        </div>
+      ) : (
+        <DatasetFilePicker onParsed={attach} />
       )}
+      {file && <input type="hidden" name="withFile" value="1" />}
+    </section>
+  );
+}
 ```
 
 Change the columns editor line:
 
 ```tsx
-      {kind === "dataset" && (
-        <ColumnsEditor
-          key={columnsKey}
-          defaultValue={file ? file.columns : initial.columns}
-          errors={errors}
-        />
-      )}
+{
+  kind === "dataset" && (
+    <ColumnsEditor
+      key={columnsKey}
+      defaultValue={file ? file.columns : initial.columns}
+      errors={errors}
+    />
+  );
+}
 ```
 
 Above the submit row:
 
 ```tsx
-      {uploadProgress !== null && file && (
-        <UploadProgress value={uploadProgress} label={`Uploading ${file.file.name}…`} />
-      )}
+{
+  uploadProgress !== null && file && (
+    <UploadProgress
+      value={uploadProgress}
+      label={`Uploading ${file.file.name}…`}
+    />
+  );
+}
 ```
 
 And disable the submit button while uploading: `<SubmitButton disabled={uploadProgress !== null} …>`.
@@ -2881,11 +3306,13 @@ git commit -m "feat(catalog): create a dataset from a CSV or Parquet file (C11)"
 ### Task 10: Upload a new version with schema review
 
 **Files:**
+
 - Create (shadcn): `src/components/ui/dialog.tsx` via `pnpm dlx shadcn@latest add dialog`
 - Create: `src/components/asset/schema-diff-list.tsx`, `src/app/w/[workspace]/catalog/[asset]/schema-review.tsx`, `src/app/w/[workspace]/catalog/[asset]/upload-version.tsx`
 - Test: `src/app/w/[workspace]/catalog/[asset]/schema-review.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `diffSchemas`, `mergeCarryOver`, `SchemaDiff` (Task 2); `DatasetFilePicker`, `UploadProgress`, `uploadDatasetFile` (Task 8); `summarizeFile` (Task 1).
 - Produces: `<SchemaDiffList diff={SchemaDiff} />` (no hooks; usable from server components); `<SchemaReview current proposed onChange />`; `<UploadVersion assetId currentColumns />`.
 
@@ -2904,7 +3331,11 @@ import type { ColumnInput } from "@/lib/asset/schema";
 
 import { SchemaReview } from "./schema-review";
 
-const col = (name: string, dataType: string, extra: Partial<ColumnInput> = {}): ColumnInput => ({
+const col = (
+  name: string,
+  dataType: string,
+  extra: Partial<ColumnInput> = {},
+): ColumnInput => ({
   name,
   dataType,
   description: "",
@@ -2913,26 +3344,51 @@ const col = (name: string, dataType: string, extra: Partial<ColumnInput> = {}): 
 });
 
 describe("SchemaReview", () => {
-  const current = [col("id", "INTEGER"), col("legacy", "STRING", { description: "Old flag" })];
+  const current = [
+    col("id", "INTEGER"),
+    col("legacy", "STRING", { description: "Old flag" }),
+  ];
   const proposed = [col("id", "INT64"), col("email", "STRING")];
 
   it("summarises the changes and warns about documented removed columns", () => {
-    render(<SchemaReview current={current} proposed={proposed} onChange={() => {}} />);
+    render(
+      <SchemaReview
+        current={current}
+        proposed={proposed}
+        onChange={() => {}}
+      />,
+    );
     expect(screen.getByText("1 added")).toBeInTheDocument();
     expect(screen.getByText("1 removed")).toBeInTheDocument();
     expect(screen.getByText("1 type change")).toBeInTheDocument();
     expect(screen.getByText(/legacy/)).toBeInTheDocument();
-    expect(screen.getByText(/its description will be lost/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/its description will be lost/),
+    ).toBeInTheDocument();
     expect(screen.getByText("INTEGER → INT64")).toBeInTheDocument();
   });
 
   it("edits descriptions and PII flags of the proposed columns", () => {
     const onChange = vi.fn();
-    render(<SchemaReview current={current} proposed={proposed} onChange={onChange} />);
+    render(
+      <SchemaReview
+        current={current}
+        proposed={proposed}
+        onChange={onChange}
+      />,
+    );
     fireEvent.click(screen.getByLabelText("email holds PII"));
-    expect(onChange).toHaveBeenLastCalledWith([col("id", "INT64"), col("email", "STRING", { isPii: true })]);
-    fireEvent.change(screen.getByLabelText("Description of id"), { target: { value: "Key" } });
-    expect(onChange).toHaveBeenLastCalledWith([col("id", "INT64", { description: "Key" }), col("email", "STRING")]);
+    expect(onChange).toHaveBeenLastCalledWith([
+      col("id", "INT64"),
+      col("email", "STRING", { isPii: true }),
+    ]);
+    fireEvent.change(screen.getByLabelText("Description of id"), {
+      target: { value: "Key" },
+    });
+    expect(onChange).toHaveBeenLastCalledWith([
+      col("id", "INT64", { description: "Key" }),
+      col("email", "STRING"),
+    ]);
   });
 });
 ```
@@ -2954,11 +3410,20 @@ const META_LABELS: Record<MetaChange, string> = {
 };
 
 /** Added, removed, retyped and re-documented columns of a schema change. */
-export function SchemaDiffList({ diff, warnOnLoss = false }: { diff: SchemaDiff; warnOnLoss?: boolean }) {
+export function SchemaDiffList({
+  diff,
+  warnOnLoss = false,
+}: {
+  diff: SchemaDiff;
+  warnOnLoss?: boolean;
+}) {
   return (
     <ul className="flex flex-col gap-1 font-mono text-sm">
       {diff.added.map((c) => (
-        <li key={`+${c.name}`} className="text-emerald-700 dark:text-emerald-400">
+        <li
+          key={`+${c.name}`}
+          className="text-emerald-700 dark:text-emerald-400"
+        >
           + {c.name} <span className="text-muted-foreground">{c.dataType}</span>
         </li>
       ))}
@@ -2968,7 +3433,11 @@ export function SchemaDiffList({ diff, warnOnLoss = false }: { diff: SchemaDiff;
           {warnOnLoss && (c.description || c.isPii) && (
             <span className="font-sans text-muted-foreground">
               {" "}
-              — its {[c.description && "description", c.isPii && "PII flag"].filter(Boolean).join(" and ")} will be lost
+              — its{" "}
+              {[c.description && "description", c.isPii && "PII flag"]
+                .filter(Boolean)
+                .join(" and ")}{" "}
+              will be lost
             </span>
           )}
         </li>
@@ -2980,7 +3449,10 @@ export function SchemaDiffList({ diff, warnOnLoss = false }: { diff: SchemaDiff;
       ))}
       {diff.metaChanged.map((c) => (
         <li key={`*${c.name}`} className="text-muted-foreground">
-          * {c.name}: <span className="font-sans">{c.changes.map((k) => META_LABELS[k]).join(", ")}</span>
+          * {c.name}:{" "}
+          <span className="font-sans">
+            {c.changes.map((k) => META_LABELS[k]).join(", ")}
+          </span>
         </li>
       ))}
     </ul>
@@ -3020,23 +3492,45 @@ export function SchemaReview({
 
   return (
     <div className="flex flex-col gap-4">
-      <ul aria-label="Summary of changes" className="flex flex-wrap gap-2 text-sm">
-        <li><Badge variant="secondary">{diff.added.length} added</Badge></li>
-        <li><Badge variant="secondary">{diff.removed.length} removed</Badge></li>
-        <li><Badge variant="secondary">{typeChanges} {typeChanges === 1 ? "type change" : "type changes"}</Badge></li>
-        <li><Badge variant="outline">{diff.unchanged.length} unchanged</Badge></li>
+      <ul
+        aria-label="Summary of changes"
+        className="flex flex-wrap gap-2 text-sm"
+      >
+        <li>
+          <Badge variant="secondary">{diff.added.length} added</Badge>
+        </li>
+        <li>
+          <Badge variant="secondary">{diff.removed.length} removed</Badge>
+        </li>
+        <li>
+          <Badge variant="secondary">
+            {typeChanges} {typeChanges === 1 ? "type change" : "type changes"}
+          </Badge>
+        </li>
+        <li>
+          <Badge variant="outline">{diff.unchanged.length} unchanged</Badge>
+        </li>
       </ul>
-      {(diff.added.length > 0 || diff.removed.length > 0 || typeChanges > 0) && (
+      {(diff.added.length > 0 ||
+        diff.removed.length > 0 ||
+        typeChanges > 0) && (
         <SchemaDiffList diff={{ ...diff, metaChanged: [] }} warnOnLoss />
       )}
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Columns after the upload</legend>
+        <legend className="mb-1 text-sm font-medium">
+          Columns after the upload
+        </legend>
         <ol className="flex flex-col divide-y rounded-xl border">
           {proposed.map((column, index) => (
-            <li key={column.name} className="grid gap-2 p-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-center">
+            <li
+              key={column.name}
+              className="grid gap-2 p-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-center"
+            >
               <span className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-sm">{column.name}</span>
-                <span className="font-mono text-xs text-muted-foreground">{column.dataType || "—"}</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {column.dataType || "—"}
+                </span>
                 {added.has(column.name) && <Badge>New</Badge>}
               </span>
               <Input
@@ -3044,13 +3538,17 @@ export function SchemaReview({
                 value={column.description}
                 maxLength={MAX_COLUMN_DESCRIPTION}
                 placeholder="Description"
-                onChange={(event) => update(index, { description: event.target.value })}
+                onChange={(event) =>
+                  update(index, { description: event.target.value })
+                }
               />
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
                   aria-label={`${column.name} holds PII`}
                   checked={column.isPii}
-                  onCheckedChange={(checked) => update(index, { isPii: checked === true })}
+                  onCheckedChange={(checked) =>
+                    update(index, { isPii: checked === true })
+                  }
                 />
                 PII
               </label>
@@ -3121,7 +3619,12 @@ export function UploadVersion({
     if (!file) return;
     setError(null);
     setProgress(0);
-    const result = await uploadDatasetFile({ assetId, parsed: file, columns, onProgress: setProgress });
+    const result = await uploadDatasetFile({
+      assetId,
+      parsed: file,
+      columns,
+      onProgress: setProgress,
+    });
     setProgress(null);
     if (!result.ok) {
       setError(result.message);
@@ -3152,8 +3655,9 @@ export function UploadVersion({
         <DialogHeader>
           <DialogTitle>Upload a new version</DialogTitle>
           <DialogDescription>
-            The file becomes the dataset's current file and its columns replace the current ones.
-            Descriptions and PII flags carry over by column name.
+            The file becomes the dataset's current file and its columns replace
+            the current ones. Descriptions and PII flags carry over by column
+            name.
           </DialogDescription>
         </DialogHeader>
 
@@ -3167,7 +3671,11 @@ export function UploadVersion({
                 columnCount: file.columns.length,
               })}
             </p>
-            <SchemaReview current={currentColumns} proposed={columns} onChange={setColumns} />
+            <SchemaReview
+              current={currentColumns}
+              proposed={columns}
+              onChange={setColumns}
+            />
           </>
         ) : (
           <DatasetFilePicker
@@ -3178,7 +3686,12 @@ export function UploadVersion({
           />
         )}
 
-        {uploading && file && <UploadProgress value={progress} label={`Uploading ${file.file.name}…`} />}
+        {uploading && file && (
+          <UploadProgress
+            value={progress}
+            label={`Uploading ${file.file.name}…`}
+          />
+        )}
         {error && (
           <Alert variant="destructive">
             <CircleAlert aria-hidden />
@@ -3220,10 +3733,12 @@ git commit -m "feat(catalog): upload a new dataset file version with a schema re
 ### Task 11: Files and History tabs
 
 **Files:**
+
 - Create: `src/app/w/[workspace]/catalog/[asset]/download-file-button.tsx`, `src/app/w/[workspace]/catalog/[asset]/files-tab.tsx`, `src/app/w/[workspace]/catalog/[asset]/history-tab.tsx`
 - Modify: `src/app/w/[workspace]/catalog/[asset]/page.tsx`
 
 **Interfaces:**
+
 - Consumes: `listDatasetFiles`, `listSchemaVersions`, `DatasetFile`, `SchemaVersion` (Task 7); `getDatasetFileDownloadUrl` (Task 7); `UploadVersion`, `SchemaDiffList` (Task 10); `diffSchemas`, `describeDiff` (Task 2); `formatBytes`, `formatTimestamp` (Task 1); `getDatasetColumns` (`@/lib/asset/server`).
 - Produces: `<FilesTab assetId canEdit currentColumns />`, `<HistoryTab assetId />`, `<DownloadFileButton fileId filename />`.
 
@@ -3240,7 +3755,13 @@ import { Button } from "@/components/ui/button";
 
 import { getDatasetFileDownloadUrl } from "../dataset-file-actions";
 
-export function DownloadFileButton({ fileId, filename }: { fileId: string; filename: string }) {
+export function DownloadFileButton({
+  fileId,
+  filename,
+}: {
+  fileId: string;
+  filename: string;
+}) {
   const [pending, startTransition] = useTransition();
   return (
     <Button
@@ -3286,7 +3807,8 @@ import { DownloadFileButton } from "./download-file-button";
 import { UploadVersion } from "./upload-version";
 
 const uploaderName = (file: DatasetFile) =>
-  file.uploader?.name ?? (file.uploader?.handle ? `@${file.uploader.handle}` : "A former member");
+  file.uploader?.name ??
+  (file.uploader?.handle ? `@${file.uploader.handle}` : "A former member");
 
 export async function FilesTab({
   assetId,
@@ -3298,7 +3820,9 @@ export async function FilesTab({
   currentColumns: ColumnInput[];
 }) {
   const files = await listDatasetFiles(assetId);
-  const upload = canEdit ? <UploadVersion assetId={assetId} currentColumns={currentColumns} /> : null;
+  const upload = canEdit ? (
+    <UploadVersion assetId={assetId} currentColumns={currentColumns} />
+  ) : null;
 
   if (!files.length) {
     return (
@@ -3314,7 +3838,10 @@ export async function FilesTab({
 
   return (
     <div className="flex flex-col gap-6">
-      <section aria-labelledby="current-file-heading" className="flex flex-col gap-3 rounded-xl border p-4">
+      <section
+        aria-labelledby="current-file-heading"
+        className="flex flex-col gap-3 rounded-xl border p-4"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="current-file-heading" className="text-base font-semibold">
             Current file
@@ -3325,9 +3852,14 @@ export async function FilesTab({
           <div className="flex flex-col gap-1">
             <p className="font-mono text-sm">{current.filename}</p>
             <p className="text-sm text-muted-foreground">
-              v{current.version} · {current.format.toUpperCase()} · {formatBytes(current.sizeBytes)}
-              {current.rowCount !== null && ` · ${current.rowCount.toLocaleString("en-US")} rows`} ·{" "}
-              {uploaderName(current)} · <time dateTime={current.uploadedAt}>{formatTimestamp(current.uploadedAt)}</time>
+              v{current.version} · {current.format.toUpperCase()} ·{" "}
+              {formatBytes(current.sizeBytes)}
+              {current.rowCount !== null &&
+                ` · ${current.rowCount.toLocaleString("en-US")} rows`}{" "}
+              · {uploaderName(current)} ·{" "}
+              <time dateTime={current.uploadedAt}>
+                {formatTimestamp(current.uploadedAt)}
+              </time>
             </p>
           </div>
           <DownloadFileButton fileId={current.id} filename={current.filename} />
@@ -3335,13 +3867,18 @@ export async function FilesTab({
       </section>
 
       {previous.length > 0 && (
-        <section aria-labelledby="previous-files-heading" className="flex flex-col gap-3">
+        <section
+          aria-labelledby="previous-files-heading"
+          className="flex flex-col gap-3"
+        >
           <h2 id="previous-files-heading" className="text-base font-semibold">
             Previous versions
           </h2>
           <div className="rounded-xl border">
             <Table>
-              <TableCaption className="sr-only">Previous file versions</TableCaption>
+              <TableCaption className="sr-only">
+                Previous file versions
+              </TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-14 px-3">Version</TableHead>
@@ -3357,17 +3894,28 @@ export async function FilesTab({
                 {previous.map((file) => (
                   <TableRow key={file.id}>
                     <TableCell className="px-3">v{file.version}</TableCell>
-                    <TableCell className="px-3 font-mono">{file.filename}</TableCell>
-                    <TableCell className="px-3">{formatBytes(file.sizeBytes)}</TableCell>
+                    <TableCell className="px-3 font-mono">
+                      {file.filename}
+                    </TableCell>
+                    <TableCell className="px-3">
+                      {formatBytes(file.sizeBytes)}
+                    </TableCell>
                     <TableCell className="px-3">
                       {uploaderName(file)} ·{" "}
-                      <time dateTime={file.uploadedAt}>{formatTimestamp(file.uploadedAt)}</time>
+                      <time dateTime={file.uploadedAt}>
+                        {formatTimestamp(file.uploadedAt)}
+                      </time>
                     </TableCell>
                     <TableCell className="px-3 text-right">
                       {file.purgedAt ? (
-                        <span className="text-sm text-muted-foreground">File removed (retention)</span>
+                        <span className="text-sm text-muted-foreground">
+                          File removed (retention)
+                        </span>
                       ) : (
-                        <DownloadFileButton fileId={file.id} filename={file.filename} />
+                        <DownloadFileButton
+                          fileId={file.id}
+                          filename={file.filename}
+                        />
                       )}
                     </TableCell>
                   </TableRow>
@@ -3392,10 +3940,14 @@ import { SchemaDiffList } from "@/components/asset/schema-diff-list";
 import { EmptyState } from "@/components/states/empty-state";
 import { formatTimestamp } from "@/lib/dataset-file/format";
 import { describeDiff, diffSchemas } from "@/lib/dataset-file/schema-diff";
-import { listSchemaVersions, type SchemaVersion } from "@/lib/dataset-file/server";
+import {
+  listSchemaVersions,
+  type SchemaVersion,
+} from "@/lib/dataset-file/server";
 
 const authorName = (v: SchemaVersion) =>
-  v.author?.name ?? (v.author?.handle ? `@${v.author.handle}` : "A former member");
+  v.author?.name ??
+  (v.author?.handle ? `@${v.author.handle}` : "A former member");
 
 export async function HistoryTab({ assetId }: { assetId: string }) {
   const versions = await listSchemaVersions(assetId);
@@ -3422,7 +3974,10 @@ export async function HistoryTab({ assetId }: { assetId: string }) {
                 <span className="text-sm">
                   {version.source === "file" ? (
                     <>
-                      from file <span className="font-mono">{version.file?.filename ?? "a removed file"}</span>
+                      from file{" "}
+                      <span className="font-mono">
+                        {version.file?.filename ?? "a removed file"}
+                      </span>
                     </>
                   ) : (
                     "manual edit"
@@ -3433,20 +3988,33 @@ export async function HistoryTab({ assetId }: { assetId: string }) {
                 </span>
                 <span className="ml-auto text-xs text-muted-foreground">
                   {authorName(version)} ·{" "}
-                  <time dateTime={version.createdAt}>{formatTimestamp(version.createdAt)}</time>
+                  <time dateTime={version.createdAt}>
+                    {formatTimestamp(version.createdAt)}
+                  </time>
                 </span>
               </summary>
               <div className="flex flex-col gap-4 border-t px-4 py-3">
                 {previous && <SchemaDiffList diff={diff} />}
                 <div>
-                  <h3 className="mb-2 text-sm font-medium">Columns in v{version.version}</h3>
+                  <h3 className="mb-2 text-sm font-medium">
+                    Columns in v{version.version}
+                  </h3>
                   <ul className="flex flex-col gap-1 text-sm">
                     {version.columns.map((column) => (
-                      <li key={column.name} className="flex flex-wrap items-center gap-2">
+                      <li
+                        key={column.name}
+                        className="flex flex-wrap items-center gap-2"
+                      >
                         <span className="font-mono">{column.name}</span>
-                        <span className="font-mono text-muted-foreground">{column.dataType || "—"}</span>
+                        <span className="font-mono text-muted-foreground">
+                          {column.dataType || "—"}
+                        </span>
                         {column.isPii && <PiiBadge />}
-                        {column.description && <span className="text-muted-foreground">— {column.description}</span>}
+                        {column.description && (
+                          <span className="text-muted-foreground">
+                            — {column.description}
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -3480,28 +4048,41 @@ const DATASET_ONLY: readonly TabId[] = ["columns", "files", "history"];
 ```
 
 ```ts
-  const tabs = TABS.filter((t) => !DATASET_ONLY.includes(t.id) || asset.kind === "dataset");
+const tabs = TABS.filter(
+  (t) => !DATASET_ONLY.includes(t.id) || asset.kind === "dataset",
+);
 ```
 
 Render:
 
 ```tsx
-      {tab === "columns" && <Columns assetId={asset.id} canEdit={canEdit} />}
-      {tab === "files" && (
-        <FilesTab
-          assetId={asset.id}
-          canEdit={canEdit}
-          currentColumns={toColumnInputs(await getDatasetColumns(asset.id))}
-        />
-      )}
-      {tab === "history" && <HistoryTab assetId={asset.id} />}
+{
+  tab === "columns" && <Columns assetId={asset.id} canEdit={canEdit} />;
+}
+{
+  tab === "files" && (
+    <FilesTab
+      assetId={asset.id}
+      canEdit={canEdit}
+      currentColumns={toColumnInputs(await getDatasetColumns(asset.id))}
+    />
+  );
+}
+{
+  tab === "history" && <HistoryTab assetId={asset.id} />;
+}
 ```
 
 Add the helper at the bottom of the file:
 
 ```ts
 function toColumnInputs(columns: DatasetColumn[]): ColumnInput[] {
-  return columns.map(({ name, dataType, description, isPii }) => ({ name, dataType, description, isPii }));
+  return columns.map(({ name, dataType, description, isPii }) => ({
+    name,
+    dataType,
+    description,
+    isPii,
+  }));
 }
 ```
 
@@ -3545,9 +4126,11 @@ git commit -m "feat(catalog): Files and History tabs on datasets (C11)"
 ### Task 12: End-to-end test
 
 **Files:**
+
 - Create: `tests/e2e/dataset-files.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `test`, `expect` (`tests/e2e/support/auth.ts`); `createWorkspace` (`tests/e2e/support/workspace.ts`); `parquetWriteBuffer` (`hyparquet-writer`).
 
 - [ ] **Step 1: Write the test**
@@ -3566,7 +4149,10 @@ async function seriousViolations(page: Page) {
     .analyze();
   return violations
     .filter((v) => v.impact === "serious" || v.impact === "critical")
-    .map((v) => ({ id: v.id, targets: v.nodes.map((n) => n.target.join(" ")) }));
+    .map((v) => ({
+      id: v.id,
+      targets: v.nodes.map((n) => n.target.join(" ")),
+    }));
 }
 
 const CSV = "order_id,amount,email\n1,9,a@example.com\n2,12,b@example.com\n";
@@ -3576,7 +4162,11 @@ const PARQUET = Buffer.from(
     columnData: [
       { name: "order_id", data: [1n, 2n], type: "INT64" },
       { name: "amount", data: [9.5, 12], type: "DOUBLE" },
-      { name: "email", data: ["a@example.com", "b@example.com"], type: "STRING" },
+      {
+        name: "email",
+        data: ["a@example.com", "b@example.com"],
+        type: "STRING",
+      },
       { name: "shipped", data: [true, false], type: "BOOLEAN" },
     ],
   }),
@@ -3590,7 +4180,11 @@ test.describe("dataset files", () => {
     signIn,
   }) => {
     const slug = await createWorkspace(admin, user, "Files Co");
-    const { data: ws } = await admin.from("workspaces").select("id").eq("slug", slug).single();
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("id")
+      .eq("slug", slug)
+      .single();
 
     try {
       await signIn(user, `/w/${slug}/catalog/new`);
@@ -3601,9 +4195,15 @@ test.describe("dataset files", () => {
         mimeType: "text/csv",
         buffer: Buffer.from(CSV),
       });
-      await expect(page.getByText(/orders\.csv · .* · 2 rows · 3 columns/)).toBeVisible();
-      await expect(page.getByLabel("Name", { exact: true })).toHaveValue("orders");
-      await expect(page.getByLabel("Qualified name")).toHaveValue("files.orders");
+      await expect(
+        page.getByText(/orders\.csv · .* · 2 rows · 3 columns/),
+      ).toBeVisible();
+      await expect(page.getByLabel("Name", { exact: true })).toHaveValue(
+        "orders",
+      );
+      await expect(page.getByLabel("Qualified name")).toHaveValue(
+        "files.orders",
+      );
       await expect(page.getByLabel("Column 2 type")).toHaveValue("INTEGER");
       expect(await seriousViolations(page)).toEqual([]);
       await page.getByLabel("Column 3 holds PII").check();
@@ -3615,7 +4215,9 @@ test.describe("dataset files", () => {
 
       // The Files tab shows the CSV as the current file.
       await sections.getByRole("link", { name: "Files" }).click();
-      await expect(page.getByRole("heading", { name: "Current file" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Current file" }),
+      ).toBeVisible();
       await expect(page.getByText("orders.csv", { exact: true })).toBeVisible();
       expect(await seriousViolations(page)).toEqual([]);
 
@@ -3632,8 +4234,12 @@ test.describe("dataset files", () => {
       await expect(dialog.getByLabel("email holds PII")).toBeChecked();
       await dialog.getByRole("button", { name: "Confirm upload" }).click();
       await expect(dialog).toBeHidden();
-      await expect(page.getByText("orders_v2.parquet", { exact: true })).toBeVisible();
-      await expect(page.getByRole("row", { name: /orders\.csv/ })).toBeVisible();
+      await expect(
+        page.getByText("orders_v2.parquet", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("row", { name: /orders\.csv/ }),
+      ).toBeVisible();
 
       // The old file downloads under its original name.
       const [download] = await Promise.all([
@@ -3652,7 +4258,9 @@ test.describe("dataset files", () => {
 
       // The PII flag survived the new version.
       await sections.getByRole("link", { name: "Columns" }).click();
-      await expect(page.getByRole("row", { name: /email/ }).getByText("PII")).toBeVisible();
+      await expect(
+        page.getByRole("row", { name: /email/ }).getByText("PII"),
+      ).toBeVisible();
     } finally {
       // Storage objects do not cascade with the workspace.
       const { data: files } = await admin
@@ -3660,7 +4268,9 @@ test.describe("dataset files", () => {
         .select("storage_path")
         .eq("workspace_id", ws!.id);
       if (files?.length) {
-        await admin.storage.from("dataset-files").remove(files.map((f) => f.storage_path));
+        await admin.storage
+          .from("dataset-files")
+          .remove(files.map((f) => f.storage_path));
       }
     }
   });
@@ -3691,6 +4301,7 @@ git commit -m "test(e2e): dataset file upload, versions, history and download (C
 ### Task 13: Docs, roadmap and changelog
 
 **Files:**
+
 - Modify: `docs/specs/architecture.md` (Assets section), `docs/roadmap.md` (add C11), `CHANGELOG.md`
 
 - [ ] **Step 1: Architecture doc**

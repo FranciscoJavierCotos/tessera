@@ -132,6 +132,21 @@ minRole? }`), so later milestones add entries by config. Routes
   RLS tests (creation, uniqueness, viewer read-only, isolation, columns,
   project links, deletion) and e2e for register → duplicate → filter → edit →
   delete, project linking and viewer read-only access (with axe checks).
+- Dataset files & schema history (C11): upload a CSV or Parquet file (≤ 50 MB)
+  to a dataset — or start a new dataset from one — and its schema is read in
+  the browser into the dataset's columns (Parquet types from the footer, CSV
+  types inferred). New versions are reviewed as a diff (added / removed /
+  retyped) with descriptions and PII flags carried over. Files go straight to
+  the private `dataset-files` bucket through a signed upload URL (10 newest
+  kept per dataset; older objects purged, their schema kept) and download
+  under their original name. Every column change, typed or from a file, is
+  recorded in a History tab. Migration `dataset_files`: enums
+  `dataset_file_format` and `schema_change_source`, tables `dataset_files`
+  and `dataset_schema_versions` (append-only for users), Storage policies,
+  RPC `add_dataset_file`, and `set_dataset_columns` now snapshots the
+  schema (existing datasets backfilled as v1). RLS tests (history, versions,
+  missing objects, viewer and cross-workspace denial, immutability) and an
+  e2e for CSV → dataset → Parquet version → history → download.
 
 ### Changed
 
