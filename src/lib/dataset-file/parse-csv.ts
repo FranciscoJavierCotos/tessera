@@ -38,7 +38,7 @@ export function createCsvSchemaBuilder() {
     addRow(row: string[]) {
       if (!header) {
         header = row.map((cell, i) =>
-          (i === 0 ? cell.replace(/^﻿/, "") : cell).trim(),
+          (i === 0 ? cell.replace(/^\uFEFF/, "") : cell).trim(),
         );
         validateColumnNames(header);
         masks = header.map(() => ALL_TYPES);

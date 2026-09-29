@@ -62,7 +62,7 @@ describe("parseCsvText", () => {
   });
 
   it("handles a BOM, semicolons and CRLF", () => {
-    const parsed = parseCsvText('﻿id;amount;note\r\n1;2.5;"a;b"\r\n');
+    const parsed = parseCsvText('\uFEFFid;amount;note\r\n1;2.5;"a;b"\r\n');
     expect(parsed.columns.map((c) => [c.name, c.dataType])).toEqual([
       ["id", "INTEGER"],
       ["amount", "DECIMAL"],
