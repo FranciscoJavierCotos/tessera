@@ -406,6 +406,16 @@ with a demo workspace._
 - [ ] `CHANGELOG.md`; tag `v0.1.0`; GitHub release.
       **Acceptance:** a stranger can open the URL, log in as demo, and explore lineage, docs, and backlinks without an account.
 
+#### C11 — Dataset files & schema history
+
+**Depends on:** C02 · **Spec:** `docs/specs/c11-dataset-files.md`
+**Goal:** attach CSV/Parquet files to datasets and track how their schema changes.
+
+- [x] Migration: `dataset_files`, `dataset_schema_versions`, bucket `dataset-files` (50 MB, CSV/Parquet), RLS + Storage policies.
+- [x] Schema read in the browser (Parquet footer, CSV type inference) on "New dataset" and "Upload new version" with a diff review.
+- [x] Files tab (current + previous versions, download, retention of 10) and History tab (schema diffs, manual and file).
+      **Acceptance:** uploading a new version shows added/removed/retyped columns before saving; descriptions and PII flags carry over; every column change is in the history; another workspace can neither read nor upload files.
+
 ---
 
 ### 🛡️ M2 — Integrations & data reliability → **v0.2.0**
@@ -856,7 +866,7 @@ Title format: `<ID> — <title>`, e.g. `C05 — Mentions & backlinks`.
 | Milestone                     | Stories                                           | Release    |
 | ----------------------------- | ------------------------------------------------- | ---------- |
 | M0 Foundations                | 8 (F01–F08)                                       | — ✅ done  |
-| M1 Collaboration MVP          | 10 (C01–C10)                                      | **v0.1.0** |
+| M1 Collaboration MVP          | 11 (C01–C11)                                      | **v0.1.0** |
 | M2 Integrations & reliability | 10 (I01–I02, Q01–Q02, P01–P02, R01–R02, A01, N01) | v0.2.0     |
 | M3 Design & architecture      | 6 (D01–D06)                                       | v0.3.0     |
 | M4 Team workflow & knowledge  | 7 (W01–W02, K01–K04, S01)                         | v0.4.0     |

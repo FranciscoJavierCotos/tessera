@@ -9,15 +9,16 @@ import { Button } from "@/components/ui/button";
 export function SubmitButton({
   children,
   pendingLabel,
+  disabled,
   ...props
 }: React.ComponentProps<typeof Button> & { pendingLabel: string }) {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
-      disabled={pending || props.disabled}
-      aria-disabled={pending || props.disabled}
       {...props}
+      disabled={pending || disabled}
+      aria-disabled={pending || disabled}
     >
       {pending ? (
         <>

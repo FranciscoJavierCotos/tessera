@@ -11,6 +11,7 @@ import {
   propertiesFor,
   type AssetInput,
 } from "@/lib/asset/schema";
+import { removeStoredFiles } from "@/lib/dataset-file/server";
 import { fieldErrors, type FormState } from "@/lib/forms";
 import { SLUG_PATTERN } from "@/lib/profile/schema";
 import { requireUser, UNIQUE_VIOLATION } from "@/lib/profile/server";
@@ -122,11 +123,19 @@ function writeError(
   return { status: "error", message: GENERIC_ERROR };
 }
 
-/** Registers an asset and opens its page. */
+/** `created`: a dataset whose file the browser uploads next (no redirect yet). */
+export type CreateAssetState =
+  FormState | { status: "created"; assetId: string; href: string };
+
+/**
+ * Registers an asset and opens its page. A dataset started from a file
+ * (`withFile=1`) is created without columns and returns `created`: the
+ * browser uploads the file next, and its columns become the v1 schema.
+ */
 export async function createAsset(
-  _previous: FormState,
+  _previous: CreateAssetState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<CreateAssetState> {
   const ref = workspaceRef.safeParse({
     workspaceId: formData.get("workspaceId"),
     workspaceSlug: formData.get("workspaceSlug"),
@@ -136,6 +145,8 @@ export async function createAsset(
   if (!input.success) {
     return { status: "error", fieldErrors: fieldErrors(input.error) };
   }
+  const withFile =
+    formData.get("withFile") === "1" && input.data.kind === "dataset";
 
   const { supabase } = await requireUser();
   const { data, error } = await supabase.rpc("create_asset", {
@@ -148,7 +159,7 @@ export async function createAsset(
     tags: input.data.tags,
     properties: propertiesFor(input.data),
     columns:
-      input.data.kind === "dataset"
+      input.data.kind === "dataset" && !withFile
         ? columnsPayload(input.data.columns)
         : undefined,
   });
@@ -157,7 +168,9 @@ export async function createAsset(
   if (!data) return { status: "error", message: GENERIC_ERROR };
 
   refreshCatalog();
-  redirect(assetPath(ref.data.workspaceSlug, data.qualified_name));
+  const href = assetPath(ref.data.workspaceSlug, data.qualified_name);
+  if (withFile) return { status: "created", assetId: data.id, href };
+  redirect(href);
 }
 
 /** Saves an asset (and a dataset's columns) and returns to its page. */
@@ -214,6 +227,12 @@ export async function deleteAsset(
   if (!input.success) return { ok: false, message: GENERIC_ERROR };
 
   const { supabase } = await requireUser();
+  // Read the stored files first: their rows cascade with the asset.
+  const files = await supabase
+    .from("dataset_files")
+    .select("workspace_id, storage_path")
+    .eq("asset_id", input.data.assetId)
+    .is("purged_at", null);
   const { data, error } = await supabase
     .from("entities")
     .delete()
@@ -225,6 +244,13 @@ export async function deleteAsset(
       ok: false,
       message: "Only the asset's owner or a workspace admin can delete it.",
     };
+  }
+  const stored = files.data ?? [];
+  if (stored.length) {
+    await removeStoredFiles(
+      stored[0]!.workspace_id,
+      stored.map((f) => f.storage_path),
+    );
   }
 
   refreshCatalog();

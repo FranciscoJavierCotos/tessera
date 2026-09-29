@@ -26,7 +26,13 @@ import {
 } from "@/components/ui/table";
 import { canEditAssets, DASHBOARD_TOOL_LABELS } from "@/lib/asset/kinds";
 import { assetPath } from "@/lib/asset/paths";
-import { getAsset, getDatasetColumns, type Asset } from "@/lib/asset/server";
+import type { ColumnInput } from "@/lib/asset/schema";
+import {
+  getAsset,
+  getDatasetColumns,
+  type Asset,
+  type DatasetColumn,
+} from "@/lib/asset/server";
 import { requireUser } from "@/lib/profile/server";
 import { projectPath } from "@/lib/project/paths";
 import { canEditProject } from "@/lib/project/roles";
@@ -34,16 +40,23 @@ import { cn } from "@/lib/utils";
 import { getMyWorkspace, type MyWorkspace } from "@/lib/workspace/server";
 
 import { AssetProjects } from "./asset-projects";
+import { FilesTab } from "./files-tab";
+import { HistoryTab } from "./history-tab";
+import { UploadVersion } from "./upload-version";
 
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "columns", label: "Columns" },
+  { id: "files", label: "Files" },
+  { id: "history", label: "History" },
   { id: "lineage", label: "Lineage" },
   { id: "docs", label: "Docs & mentions" },
   { id: "discussion", label: "Discussion" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+const DATASET_ONLY: readonly TabId[] = ["columns", "files", "history"];
 
 export async function generateMetadata({
   params,
@@ -55,7 +68,10 @@ export async function generateMetadata({
   return { title: parts.filter(Boolean).join(" · ") };
 }
 
-/** An asset's page: overview, columns (datasets) and later-feature tabs. */
+/**
+ * An asset's page: overview, columns, files and schema history (datasets)
+ * and later-feature tabs.
+ */
 export default async function AssetPage({
   params,
   searchParams,
@@ -67,7 +83,7 @@ export default async function AssetPage({
   if (!asset) notFound();
 
   const tabs = TABS.filter(
-    (t) => t.id !== "columns" || asset.kind === "dataset",
+    (t) => !DATASET_ONLY.includes(t.id) || asset.kind === "dataset",
   );
   const requested = (await searchParams).tab;
   const tab: TabId = tabs.find((t) => t.id === requested)?.id ?? "overview";
@@ -118,7 +134,15 @@ export default async function AssetPage({
       </nav>
 
       {tab === "overview" && <Overview asset={asset} workspace={workspace} />}
-      {tab === "columns" && <Columns assetId={asset.id} />}
+      {tab === "columns" && <Columns assetId={asset.id} canEdit={canEdit} />}
+      {tab === "files" && (
+        <FilesTab
+          assetId={asset.id}
+          canEdit={canEdit}
+          currentColumns={toColumnInputs(await getDatasetColumns(asset.id))}
+        />
+      )}
+      {tab === "history" && <HistoryTab assetId={asset.id} />}
       {tab === "lineage" && (
         <EmptyState
           icon={GitFork}
@@ -282,14 +306,24 @@ async function Overview({
   );
 }
 
-async function Columns({ assetId }: { assetId: string }) {
+async function Columns({
+  assetId,
+  canEdit,
+}: {
+  assetId: string;
+  canEdit: boolean;
+}) {
   const columns = await getDatasetColumns(assetId);
+  const upload = canEdit ? (
+    <UploadVersion assetId={assetId} currentColumns={toColumnInputs(columns)} />
+  ) : null;
   if (columns.length === 0) {
     return (
       <EmptyState
         icon={Columns3}
         title="No columns documented"
-        description="Add the dataset's columns from Edit asset."
+        description="Add the dataset's columns from Edit asset, or upload a CSV or Parquet file."
+        action={upload}
       />
     );
   }
@@ -302,6 +336,7 @@ async function Columns({ assetId }: { assetId: string }) {
           {columns.length} {columns.length === 1 ? "column" : "columns"}
         </h2>
         {pii > 0 && <PiiBadge count={pii} />}
+        {upload && <div className="ml-auto">{upload}</div>}
       </div>
       <div className="rounded-xl border">
         <Table>
@@ -341,4 +376,13 @@ async function Columns({ assetId }: { assetId: string }) {
       </div>
     </section>
   );
+}
+
+function toColumnInputs(columns: DatasetColumn[]): ColumnInput[] {
+  return columns.map(({ name, dataType, description, isPii }) => ({
+    name,
+    dataType,
+    description,
+    isPii,
+  }));
 }
