@@ -2,10 +2,14 @@
 
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { ASSET_KIND_ICONS } from "@/components/asset/asset-badges";
+import { DatasetFilePicker } from "@/components/asset/dataset-file-picker";
 import { TagsInput } from "@/components/asset/tags-input";
+import { UploadProgress } from "@/components/asset/upload-progress";
 import { FieldError } from "@/components/form/field-error";
 import { SubmitButton } from "@/components/form/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -32,6 +36,7 @@ import {
   type DashboardTool,
 } from "@/lib/asset/kinds";
 import {
+  columnsSchema,
   MAX_ASSET_DESCRIPTION,
   MAX_ASSET_NAME,
   MAX_PROPERTY_TEXT,
@@ -41,12 +46,28 @@ import {
   type ColumnInput,
 } from "@/lib/asset/schema";
 import type { MemberOption } from "@/lib/asset/server";
-import type { FormState } from "@/lib/forms";
+import { summarizeFile } from "@/lib/dataset-file/format";
+import { fileStem } from "@/lib/dataset-file/limits";
+import type { ParsedDatasetFile } from "@/lib/dataset-file/parse";
 
-import { createAsset, updateAsset } from "./actions";
+import { createAsset, updateAsset, type CreateAssetState } from "./actions";
 import { ColumnsEditor } from "./columns-editor";
+import { uploadDatasetFile } from "./upload-dataset-file";
 
-const idle: FormState = { status: "idle" };
+const idle: CreateAssetState = { status: "idle" };
+
+/** The columns the form submitted (the hidden `columns` input). */
+function submittedColumns(formData: FormData): ColumnInput[] {
+  const raw = formData.get("columns");
+  let value: unknown = [];
+  try {
+    value = typeof raw === "string" && raw ? JSON.parse(raw) : [];
+  } catch {
+    // Malformed input: the server action reports it.
+  }
+  const parsed = columnsSchema.safeParse(value);
+  return parsed.success ? parsed.data : [];
+}
 
 export type AssetFormValues = {
   kind: AssetKind;
@@ -78,8 +99,19 @@ export function AssetForm({
   cancelHref: string;
 }) {
   const editing = Boolean(assetId);
+  const router = useRouter();
+  const columnsForFile = useRef<ColumnInput[]>([]);
+  const uploadStarted = useRef<string | null>(null);
+  const [file, setFile] = useState<ParsedDatasetFile | null>(null);
+  const [columnsKey, setColumnsKey] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
   const [state, action] = useActionState(
-    editing ? updateAsset : createAsset,
+    async (previous: CreateAssetState, formData: FormData) => {
+      if (editing) return updateAsset({ status: "idle" }, formData);
+      columnsForFile.current = submittedColumns(formData);
+      return createAsset(previous, formData);
+    },
     idle,
   );
   const errors = state.status === "error" ? state.fieldErrors : undefined;
@@ -97,6 +129,41 @@ export function AssetForm({
   const [framework, setFramework] = useState(
     initial.properties.framework ?? "",
   );
+
+  // A dataset created from a file: upload it, then open the dataset.
+  useEffect(() => {
+    if (state.status !== "created" || !file) return;
+    if (uploadStarted.current === state.assetId) return;
+    uploadStarted.current = state.assetId;
+    setUploadProgress(0);
+    void uploadDatasetFile({
+      assetId: state.assetId,
+      parsed: file,
+      columns: columnsForFile.current,
+      onProgress: setUploadProgress,
+    }).then((result) => {
+      if (result.ok) {
+        router.push(state.href);
+        return;
+      }
+      toast.error(
+        `The dataset was added, but the file did not upload: ${result.message} Upload it again from the Files tab.`,
+      );
+      router.push(`${state.href}?tab=files`);
+    });
+  }, [state, file, router]);
+
+  function attach(parsed: ParsedDatasetFile) {
+    const stem = fileStem(parsed.file.name);
+    setFile(parsed);
+    setColumnsKey((k) => k + 1);
+    if (!name.trim()) setName(stem);
+    if (!qualifiedNameEdited) {
+      const table =
+        suggestQualifiedName(stem).replaceAll(".", "_") || "dataset";
+      setQualifiedName(`files.${table}`);
+    }
+  }
 
   const describedBy = (field: string, hint?: string) =>
     [errors?.[field] ? `asset-${field}-error` : null, hint]
@@ -161,6 +228,47 @@ export function AssetForm({
             })}
           </RadioGroup>
         </fieldset>
+      )}
+
+      {!editing && kind === "dataset" && (
+        <section
+          aria-labelledby="asset-file-heading"
+          className="flex flex-col gap-2"
+        >
+          <h2 id="asset-file-heading" className="text-sm font-medium">
+            Start from a file{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional)
+            </span>
+          </h2>
+          {file ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
+              <p className="text-sm">
+                {summarizeFile({
+                  filename: file.file.name,
+                  sizeBytes: file.file.size,
+                  rowCount: file.rowCount,
+                  columnCount: file.columns.length,
+                })}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={uploadProgress !== null}
+                onClick={() => {
+                  setFile(null);
+                  setColumnsKey((k) => k + 1);
+                }}
+              >
+                Remove file
+              </Button>
+            </div>
+          ) : (
+            <DatasetFilePicker onParsed={attach} />
+          )}
+          {file && <input type="hidden" name="withFile" value="1" />}
+        </section>
       )}
 
       <div className="flex flex-col gap-2">
@@ -373,14 +481,28 @@ export function AssetForm({
       )}
 
       {kind === "dataset" && (
-        <ColumnsEditor defaultValue={initial.columns} errors={errors} />
+        <ColumnsEditor
+          key={columnsKey}
+          defaultValue={file ? file.columns : initial.columns}
+          errors={errors}
+        />
+      )}
+
+      {uploadProgress !== null && file && (
+        <UploadProgress
+          value={uploadProgress}
+          label={`Uploading ${file.file.name}…`}
+        />
       )}
 
       <div className="flex justify-between gap-3">
         <Button asChild variant="ghost">
           <Link href={cancelHref}>Cancel</Link>
         </Button>
-        <SubmitButton pendingLabel={editing ? "Saving…" : "Adding…"}>
+        <SubmitButton
+          pendingLabel={editing ? "Saving…" : "Adding…"}
+          disabled={uploadProgress !== null}
+        >
           {editing ? "Save changes" : "Add to catalog"}
         </SubmitButton>
       </div>
