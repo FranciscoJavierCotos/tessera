@@ -75,6 +75,10 @@ workspaces ─┬─ workspace_members (workspace_id, user_id, role)
 
 profiles (id = auth.users.id, handle, display_name, discipline, bio, skills[])
 project_members (project_id, user_id, role: lead|contributor|viewer)
+assets (id = entity, kind, qualified_name citext unique per workspace, description, properties jsonb, tags[])
+dataset_columns (asset_id → dataset, name citext unique per asset, data_type, description, is_pii, ordinal)
+project_assets (project_id, asset_id, added_by)             same-workspace links
+catalog_assets (view, security invoker)                     asset + entity + owner + counts
 ```
 
 Extension-table rule: `<ext>.id uuid primary key references entities(id) on delete cascade`,
@@ -111,6 +115,27 @@ Invariant: a workspace always has ≥ 1 owner (DB-enforced, F07).
 Workspace owners/admins act as leads on every project. A workspace `viewer`
 is read-only whatever their project role. Project members must be members of
 the workspace (composite FK; leaving the workspace removes them).
+
+### Assets (C02)
+
+An **asset** is an entity of type `asset` with a row in `assets` holding its
+`kind` (`dataset | dashboard | source_system | ml_model`, immutable), its
+`qualified_name` (`db.schema.table` for datasets; unique per workspace,
+case-insensitive, without whitespace or `/ ? # % \`; it is the URL segment
+`/catalog/<qualified name>`), a markdown description, kind-specific
+`properties` (dashboard `url` + `tool`, source system `system`, model
+`framework`, optional `url`) and `tags`. `create_asset` makes assets
+workspace-visible; every workspace member (not viewer) creates and edits
+them, and the owner or a workspace owner/admin deletes them. The owner is
+the entity's `owner_id` and can be any workspace member (trigger
+`entities_guard_owner`).
+
+Only datasets have `dataset_columns` (composite FK on the kind);
+`set_dataset_columns` replaces them in order, matching by name so ids (and
+later column comments) survive edits. `project_assets` links an asset to a
+project of the same workspace; project leads/contributors (and workspace
+owners/admins) link and unlink, and a link is visible only to someone who can
+see both sides.
 
 ### RLS helper functions
 

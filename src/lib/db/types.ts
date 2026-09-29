@@ -14,6 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      assets: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          properties: Json
+          qualified_name: string
+          tags: string[]
+          type: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          properties?: Json
+          qualified_name: string
+          tags?: string[]
+          type?: Database["public"]["Enums"]["entity_type"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["asset_kind"]
+          properties?: Json
+          qualified_name?: string
+          tags?: string[]
+          type?: Database["public"]["Enums"]["entity_type"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_entity_fk"
+            columns: ["id", "workspace_id", "type"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id", "workspace_id", "type"]
+          },
+        ]
+      }
+      dataset_columns: {
+        Row: {
+          asset_id: string
+          asset_kind: Database["public"]["Enums"]["asset_kind"]
+          created_at: string
+          data_type: string
+          description: string
+          id: string
+          is_pii: boolean
+          name: string
+          ordinal: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          asset_id: string
+          asset_kind?: Database["public"]["Enums"]["asset_kind"]
+          created_at?: string
+          data_type?: string
+          description?: string
+          id?: string
+          is_pii?: boolean
+          name: string
+          ordinal: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          asset_id?: string
+          asset_kind?: Database["public"]["Enums"]["asset_kind"]
+          created_at?: string
+          data_type?: string
+          description?: string
+          id?: string
+          is_pii?: boolean
+          name?: string
+          ordinal?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dataset_columns_asset_fk"
+            columns: ["asset_id", "workspace_id", "asset_kind"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id", "workspace_id", "kind"]
+          },
+          {
+            foreignKeyName: "dataset_columns_asset_fk"
+            columns: ["asset_id", "workspace_id", "asset_kind"]
+            isOneToOne: false
+            referencedRelation: "catalog_assets"
+            referencedColumns: ["id", "workspace_id", "kind"]
+          },
+        ]
+      }
       entities: {
         Row: {
           created_at: string
@@ -164,6 +268,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_assets: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          asset_id: string
+          project_id: string
+          workspace_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          asset_id: string
+          project_id: string
+          workspace_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          asset_id?: string
+          project_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assets_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assets_asset_fk"
+            columns: ["asset_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "project_assets_asset_fk"
+            columns: ["asset_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_assets"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "project_assets_project_fk"
+            columns: ["project_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "workspace_id"]
+          },
+        ]
       }
       project_members: {
         Row: {
@@ -325,11 +482,70 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      catalog_assets: {
+        Row: {
+          column_count: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          kind: Database["public"]["Enums"]["asset_kind"] | null
+          name: string | null
+          owner_handle: string | null
+          owner_id: string | null
+          owner_name: string | null
+          pii_column_count: number | null
+          project_ids: string[] | null
+          properties: Json | null
+          qualified_name: string | null
+          tags: string[] | null
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invite: { Args: { token: string }; Returns: string }
       accept_pending_invite: { Args: { invite_id: string }; Returns: string }
+      create_asset: {
+        Args: {
+          columns?: Json
+          description?: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          name: string
+          owner?: string
+          properties?: Json
+          qualified_name: string
+          tags?: string[]
+          workspace: string
+        }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          properties: Json
+          qualified_name: string
+          tags: string[]
+          type: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "assets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_project: {
         Args: {
           description?: string
@@ -400,6 +616,58 @@ export type Database = {
           workspace_slug: string
         }[]
       }
+      set_dataset_columns: {
+        Args: { asset: string; columns: Json }
+        Returns: {
+          asset_id: string
+          asset_kind: Database["public"]["Enums"]["asset_kind"]
+          created_at: string
+          data_type: string
+          description: string
+          id: string
+          is_pii: boolean
+          name: string
+          ordinal: number
+          updated_at: string
+          workspace_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "dataset_columns"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      update_asset: {
+        Args: {
+          asset: string
+          columns?: Json
+          description: string
+          name: string
+          owner: string
+          properties: Json
+          qualified_name: string
+          tags: string[]
+        }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          properties: Json
+          qualified_name: string
+          tags: string[]
+          type: Database["public"]["Enums"]["entity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "assets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_project: {
         Args: {
           description: string
@@ -429,6 +697,7 @@ export type Database = {
       }
     }
     Enums: {
+      asset_kind: "dataset" | "dashboard" | "source_system" | "ml_model"
       discipline:
         | "data_analyst"
         | "data_scientist"
@@ -567,6 +836,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      asset_kind: ["dataset", "dashboard", "source_system", "ml_model"],
       discipline: [
         "data_analyst",
         "data_scientist",

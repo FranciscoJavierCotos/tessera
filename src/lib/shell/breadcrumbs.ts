@@ -12,10 +12,14 @@ const PAGE_LABELS: Record<string, string> = {
   members: "Members",
 };
 
+/** Route words and slugs read as prose; identifiers (`marts.fct_orders`) as written. */
+const SLUG_SEGMENT = /^[a-z0-9-]+$/;
+
 function labelFor(segment: string): string {
   const decoded = decodeURIComponent(segment);
+  if (PAGE_LABELS[decoded]) return PAGE_LABELS[decoded];
+  if (!SLUG_SEGMENT.test(decoded)) return decoded;
   return (
-    PAGE_LABELS[decoded] ??
     decoded.charAt(0).toUpperCase() + decoded.slice(1).replaceAll("-", " ")
   );
 }
