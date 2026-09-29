@@ -304,7 +304,7 @@ with a demo workspace._
 
 #### C02 — Asset catalog core
 
-**Depends on:** C01 · **Delivered:** #23
+**Depends on:** C01 · **Delivered:** #32
 **Goal:** a shared inventory of the team's data assets with owners.
 
 - [x] Migration: `assets` (kind, `qualified_name` unique per workspace, `properties jsonb`, tags), `dataset_columns`, `project_assets`.
