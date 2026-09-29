@@ -2,7 +2,6 @@ import {
   Columns3,
   ExternalLink,
   FileText,
-  GitFork,
   MessagesSquare,
   Pencil,
 } from "lucide-react";
@@ -33,6 +32,7 @@ import {
   type Asset,
   type DatasetColumn,
 } from "@/lib/asset/server";
+import { parseDepth } from "@/lib/lineage/lineage";
 import { requireUser } from "@/lib/profile/server";
 import { projectPath } from "@/lib/project/paths";
 import { canEditProject } from "@/lib/project/roles";
@@ -42,6 +42,7 @@ import { getMyWorkspace, type MyWorkspace } from "@/lib/workspace/server";
 import { AssetProjects } from "./asset-projects";
 import { FilesTab } from "./files-tab";
 import { HistoryTab } from "./history-tab";
+import { LineageTab } from "./lineage-tab";
 import { UploadVersion } from "./upload-version";
 
 const TABS = [
@@ -69,8 +70,8 @@ export async function generateMetadata({
 }
 
 /**
- * An asset's page: overview, columns, files and schema history (datasets)
- * and later-feature tabs.
+ * An asset's page: overview, columns, files and schema history (datasets),
+ * lineage and later-feature tabs.
  */
 export default async function AssetPage({
   params,
@@ -85,8 +86,8 @@ export default async function AssetPage({
   const tabs = TABS.filter(
     (t) => !DATASET_ONLY.includes(t.id) || asset.kind === "dataset",
   );
-  const requested = (await searchParams).tab;
-  const tab: TabId = tabs.find((t) => t.id === requested)?.id ?? "overview";
+  const query = await searchParams;
+  const tab: TabId = tabs.find((t) => t.id === query.tab)?.id ?? "overview";
   const href = assetPath(workspace.slug, asset.qualifiedName);
   const canEdit = canEditAssets(workspace.role);
 
@@ -144,10 +145,12 @@ export default async function AssetPage({
       )}
       {tab === "history" && <HistoryTab assetId={asset.id} />}
       {tab === "lineage" && (
-        <EmptyState
-          icon={GitFork}
-          title="Lineage is on its way"
-          description="Upstream and downstream assets will be drawn here."
+        <LineageTab
+          asset={asset}
+          workspace={workspace}
+          href={href}
+          depth={parseDepth(query.depth)}
+          canEdit={canEdit}
         />
       )}
       {tab === "docs" && (
