@@ -317,14 +317,14 @@ with a demo workspace._
 
 #### C03 — Asset graph & lineage view
 
-**Depends on:** C02
+**Depends on:** C02 · **Delivered:** #24
 **Goal:** see how data flows between assets.
 
-- [ ] Migration: `asset_edges` (from, to, relation `feeds|reads|writes|derived_from`, source `manual|dbt|api`), unique `(from, to, relation)`, check `from <> to`.
-- [ ] SQL function `asset_lineage(root, direction, max_depth)`: recursive CTE with cycle protection; returns nodes and edges.
-- [ ] UI: "Add upstream / downstream" picker on the asset page.
-- [ ] Lineage tab: React Flow + elkjs left-to-right layout, depth selector (1–5), click a node to navigate, highlight the root.
-- [ ] Performance check: a seeded graph of 1,000 nodes returns in < 300 ms locally (index on edges).
+- [x] Migration: `asset_edges` (from, to, relation `feeds|reads|writes|derived_from`, source `manual|dbt|api`), unique `(from, to, relation)`, check `from <> to`.
+- [x] SQL function `asset_lineage(root, direction, max_depth)`: recursive CTE with cycle protection; returns nodes and edges.
+- [x] UI: "Add upstream / downstream" picker on the asset page.
+- [x] Lineage tab: React Flow + elkjs left-to-right layout, depth selector (1–5), click a node to navigate, highlight the root.
+- [x] Performance check: a seeded graph of 1,000 nodes returns in < 300 ms locally (index on edges). Measured on the cloud project: ~40 ms at depth 5.
       **Acceptance:** upstream and downstream render correctly on a graph containing a cycle (no infinite loop); unit tests for the SQL function.
 
 #### C04 — Docs & wiki editor
