@@ -317,7 +317,7 @@ with a demo workspace._
 
 #### C03 — Asset graph & lineage view
 
-**Depends on:** C02 · **Delivered:** #24
+**Depends on:** C02 · **Delivered:** #36
 **Goal:** see how data flows between assets.
 
 - [x] Migration: `asset_edges` (from, to, relation `feeds|reads|writes|derived_from`, source `manual|dbt|api`), unique `(from, to, relation)`, check `from <> to`.
