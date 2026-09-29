@@ -147,6 +147,23 @@ minRole? }`), so later milestones add entries by config. Routes
   schema (existing datasets backfilled as v1). RLS tests (history, versions,
   missing objects, viewer and cross-workspace denial, immutability) and an
   e2e for CSV → dataset → Parquet version → history → download.
+- Asset graph & lineage (C03): a Lineage tab on every asset draws its
+  upstream and downstream assets left to right (React Flow + elkjs) with a
+  1–5 depth selector, the asset highlighted and every node linking to its own
+  lineage; direct connections are also listed (with relation and source) so
+  the graph has a keyboard- and screen-reader-friendly equivalent. Members
+  add upstream or downstream assets from a catalog search dialog and remove
+  manual connections. Migration `asset_edges`: enums `asset_relation`
+  (`feeds | reads | writes | derived_from`) and `edge_source`
+  (`manual | dbt | api`), table `asset_edges` (same-workspace composite FKs,
+  unique `(from, to, relation)`, no self-edges, never updated; users add only
+  `manual` edges), RPC `asset_lineage(root, direction, max_depth)` (breadth-first
+  recursive CTE, cycle-safe). Migration `asset_lineage_definer` moves the
+  walk into `private.asset_lineage` (security definer, one read check per
+  reached node): depth 5 on a seeded 1,000-node graph with cycles went from
+  ~190 ms to ~40 ms. Unit tests (parsing, connections, layout with a cycle),
+  RLS tests (cycles, depth, private assets, viewer and cross-workspace
+  denial) and e2e (add, duplicate, cycle, depth, navigate, remove, viewer).
 
 ### Changed
 

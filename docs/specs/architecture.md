@@ -79,6 +79,7 @@ assets (id = entity, kind, qualified_name citext unique per workspace, descripti
 dataset_columns (asset_id → dataset, name citext unique per asset, data_type, description, is_pii, ordinal)
 project_assets (project_id, asset_id, added_by)             same-workspace links
 catalog_assets (view, security invoker)                     asset + entity + owner + counts
+asset_edges (from_asset → to_asset, relation, source)       lineage, same workspace, from = upstream
 ```
 
 Extension-table rule: `<ext>.id uuid primary key references entities(id) on delete cascade`,
@@ -159,6 +160,30 @@ see both sides.
   the file to Storage → `commitDatasetFile` calls the `add_dataset_file`
   RPC, which records the version and applies the reviewed columns in one
   transaction. Files never pass through Next.js (request body limits).
+
+### Lineage (C03)
+
+`asset_edges` connects two assets of one workspace (composite FKs to
+`assets (id, workspace_id)`); data always flows `from_asset` → `to_asset`.
+`relation` is `feeds | reads | writes | derived_from`, `source` is
+`manual | dbt | api`; one edge per `(from, to, relation)`, no self-edges,
+cycles allowed. An edge is readable with both assets and added (users: only
+`manual`) or removed by writers of both; edges are never updated.
+
+`asset_lineage(root, direction, max_depth)` (`upstream | downstream | both`,
+1–5) returns `{ nodes, edges }`: each node with its fewest-hop
+`upstream_depth` / `downstream_depth`, and every edge walked. The public RPC
+wraps `private.asset_lineage` (security definer): it raises 42501 unless the
+caller can read the root, follows only the root's workspace, and never
+enters an asset the caller cannot read (`can_read_entity_row` once per
+reached node), which is what RLS on `asset_edges` would give at a fraction
+of the cost. Each recursion level keeps `(id, depth)` once (`union`) and
+stops at `max_depth`, so cycles neither loop nor explode into every path
+(~40 ms at depth 5 on a 1,000-node graph with cycles).
+
+The Lineage tab lays the result out with elkjs (`layered`, left to right)
+and draws it with React Flow; nodes are links (the graph is not editable),
+and the direct connections are repeated as lists with remove actions.
 
 ### RLS helper functions
 

@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_edges: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_asset: string
+          id: string
+          relation: Database["public"]["Enums"]["asset_relation"]
+          source: Database["public"]["Enums"]["edge_source"]
+          to_asset: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_asset: string
+          id?: string
+          relation?: Database["public"]["Enums"]["asset_relation"]
+          source?: Database["public"]["Enums"]["edge_source"]
+          to_asset: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_asset?: string
+          id?: string
+          relation?: Database["public"]["Enums"]["asset_relation"]
+          source?: Database["public"]["Enums"]["edge_source"]
+          to_asset?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_edges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_edges_from_fk"
+            columns: ["from_asset", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "asset_edges_from_fk"
+            columns: ["from_asset", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_assets"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "asset_edges_to_fk"
+            columns: ["to_asset", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "asset_edges_to_fk"
+            columns: ["to_asset", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_assets"
+            referencedColumns: ["id", "workspace_id"]
+          },
+        ]
+      }
       assets: {
         Row: {
           created_at: string
@@ -685,6 +754,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      asset_lineage: {
+        Args: { direction?: string; max_depth?: number; root: string }
+        Returns: Json
+      }
       create_asset: {
         Args: {
           columns?: Json
@@ -873,6 +946,7 @@ export type Database = {
     }
     Enums: {
       asset_kind: "dataset" | "dashboard" | "source_system" | "ml_model"
+      asset_relation: "feeds" | "reads" | "writes" | "derived_from"
       dataset_file_format: "csv" | "parquet"
       discipline:
         | "data_analyst"
@@ -880,6 +954,7 @@ export type Database = {
         | "data_engineer"
         | "analytics_engineer"
         | "lead"
+      edge_source: "manual" | "dbt" | "api"
       entity_type: "project" | "asset" | "page"
       project_role: "lead" | "contributor" | "viewer"
       project_status: "planning" | "active" | "paused" | "done"
@@ -1014,6 +1089,7 @@ export const Constants = {
   public: {
     Enums: {
       asset_kind: ["dataset", "dashboard", "source_system", "ml_model"],
+      asset_relation: ["feeds", "reads", "writes", "derived_from"],
       dataset_file_format: ["csv", "parquet"],
       discipline: [
         "data_analyst",
@@ -1022,6 +1098,7 @@ export const Constants = {
         "analytics_engineer",
         "lead",
       ],
+      edge_source: ["manual", "dbt", "api"],
       entity_type: ["project", "asset", "page"],
       project_role: ["lead", "contributor", "viewer"],
       project_status: ["planning", "active", "paused", "done"],
