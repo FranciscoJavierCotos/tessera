@@ -11,6 +11,7 @@ import {
   propertiesFor,
   type AssetInput,
 } from "@/lib/asset/schema";
+import { removeStoredFiles } from "@/lib/dataset-file/server";
 import { fieldErrors, type FormState } from "@/lib/forms";
 import { SLUG_PATTERN } from "@/lib/profile/schema";
 import { requireUser, UNIQUE_VIOLATION } from "@/lib/profile/server";
@@ -214,6 +215,12 @@ export async function deleteAsset(
   if (!input.success) return { ok: false, message: GENERIC_ERROR };
 
   const { supabase } = await requireUser();
+  // Read the stored files first: their rows cascade with the asset.
+  const files = await supabase
+    .from("dataset_files")
+    .select("workspace_id, storage_path")
+    .eq("asset_id", input.data.assetId)
+    .is("purged_at", null);
   const { data, error } = await supabase
     .from("entities")
     .delete()
@@ -225,6 +232,13 @@ export async function deleteAsset(
       ok: false,
       message: "Only the asset's owner or a workspace admin can delete it.",
     };
+  }
+  const stored = files.data ?? [];
+  if (stored.length) {
+    await removeStoredFiles(
+      stored[0]!.workspace_id,
+      stored.map((f) => f.storage_path),
+    );
   }
 
   refreshCatalog();
