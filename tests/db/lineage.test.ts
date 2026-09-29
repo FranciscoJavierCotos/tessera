@@ -133,6 +133,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // B is a shared fixture user: remove what this file created in globex.
+  if (globexAsset) await admin.from("entities").delete().eq("id", globexAsset);
   await deleteFixtureUsers(admin, [m.id, n.id]);
 });
 
